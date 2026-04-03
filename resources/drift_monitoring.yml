@@ -1,0 +1,28 @@
+resources:
+  jobs:
+    drift_monitoring_job:
+      name: financial-drift-monitoring
+      schedule:
+        quartz_cron_expression: "0 */30 * * * ?"
+        timezone_id: UTC
+        pause_status: ${var.schedule_pause_status}
+      tags:
+        project: financial-ai-mlops
+        pipeline: monitoring
+      tasks:
+        - task_key: detect_drift
+          notebook_task:
+            notebook_path: ../scripts/financial/detect_drift.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+              schema_name: ${var.schema_name}
+          job_cluster_key: monitoring_cluster
+
+      job_clusters:
+        - job_cluster_key: monitoring_cluster
+          new_cluster:
+            spark_version: 15.4.x-cpu-ml-scala2.12
+            node_type_id: Standard_DS3_v2
+            num_workers: 0
+            spark_conf:
+              "spark.databricks.delta.enableChangeDataFeed": "true"

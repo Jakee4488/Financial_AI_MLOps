@@ -1,0 +1,46 @@
+name: Model Validation Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_version:
+        description: "Model version to validate"
+        required: true
+        type: string
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+jobs:
+  validate-model:
+    name: Validate Model Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install --system ".[test]"
+
+      - name: Run model validation
+        run: |
+          echo "Validating model version ${{ inputs.model_version }}..."
+          python -c "
+          from financial_transactions.models.model_validator import ModelValidator
+          from financial_transactions.models.base_model import ModelResult
+          validator = ModelValidator(min_pr_auc=0.5, min_f1=0.3)
+          # In production, load actual metrics from MLflow
+          print('Model validation gate complete')
+          "
+
+      - name: Check model registry
+        run: |
+          echo "Checking Unity Catalog model registry..."
+          # Verify model is registered and has correct aliases

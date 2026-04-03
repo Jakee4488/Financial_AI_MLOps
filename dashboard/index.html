@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial AI — Performance Dashboard</title>
+    <meta name="description" content="Enterprise-grade model performance dashboard for financial market anomaly detection MLOps">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="main-header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-icon">◈</span>
+                <h1>Financial AI</h1>
+                <span class="badge">MLOps</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator" id="pipeline-status">
+                <span class="status-dot active"></span>
+                <span>Pipeline Active</span>
+            </div>
+            <div class="last-updated" id="last-updated">
+                Updated: <span>—</span>
+            </div>
+            <button class="btn-refresh" id="btn-refresh" title="Refresh Data">⟳</button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard">
+        <!-- Row 1: KPI Cards -->
+        <section class="kpi-row" id="kpi-section">
+            <div class="kpi-card" id="kpi-prauc">
+                <div class="kpi-label">PR-AUC</div>
+                <div class="kpi-value" id="val-prauc">—</div>
+                <div class="kpi-trend up" id="trend-prauc">—</div>
+            </div>
+            <div class="kpi-card" id="kpi-f1">
+                <div class="kpi-label">F1 Score</div>
+                <div class="kpi-value" id="val-f1">—</div>
+                <div class="kpi-trend up" id="trend-f1">—</div>
+            </div>
+            <div class="kpi-card" id="kpi-precision">
+                <div class="kpi-label">Precision</div>
+                <div class="kpi-value" id="val-precision">—</div>
+                <div class="kpi-trend" id="trend-precision">—</div>
+            </div>
+            <div class="kpi-card" id="kpi-recall">
+                <div class="kpi-label">Recall</div>
+                <div class="kpi-value" id="val-recall">—</div>
+                <div class="kpi-trend" id="trend-recall">—</div>
+            </div>
+            <div class="kpi-card accent" id="kpi-champion">
+                <div class="kpi-label">Champion</div>
+                <div class="kpi-value" id="val-champion">—</div>
+                <div class="kpi-trend" id="trend-champion">—</div>
+            </div>
+        </section>
+
+        <!-- Row 2: Tournament + Champion/Challenger -->
+        <section class="grid-row-2">
+            <div class="card" id="tournament-card">
+                <div class="card-header">
+                    <h2>🏆 Model Tournament</h2>
+                    <span class="card-badge" id="tournament-date">—</span>
+                </div>
+                <div class="card-body">
+                    <canvas id="radarChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="card" id="comparison-card">
+                <div class="card-header">
+                    <h2>⚔️ Champion vs Challenger</h2>
+                    <span class="card-badge" id="comparison-decision">—</span>
+                </div>
+                <div class="card-body">
+                    <div class="comparison-grid" id="comparison-grid">
+                        <div class="comparison-placeholder">No comparison data available</div>
+                    </div>
+                    <canvas id="comparisonBar" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Row 3: Live Metrics + Drift -->
+        <section class="grid-row-3">
+            <div class="card wide" id="metrics-card">
+                <div class="card-header">
+                    <h2>📈 Performance Trend</h2>
+                    <div class="chart-controls">
+                        <button class="chip active" data-metric="pr_auc">PR-AUC</button>
+                        <button class="chip" data-metric="f1_score">F1</button>
+                        <button class="chip" data-metric="precision">Precision</button>
+                        <button class="chip" data-metric="recall">Recall</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" width="800" height="250"></canvas>
+                </div>
+            </div>
+
+            <div class="card" id="drift-card">
+                <div class="card-header">
+                    <h2>🎯 Drift Monitoring</h2>
+                </div>
+                <div class="card-body">
+                    <div class="gauge-container">
+                        <div class="gauge" id="psi-gauge">
+                            <div class="gauge-label">PSI</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" id="psi-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="gauge-values">
+                                <span id="psi-value">0.00</span>
+                                <span class="gauge-threshold">/ 0.20</span>
+                            </div>
+                        </div>
+                        <div class="gauge" id="js-gauge">
+                            <div class="gauge-label">JS Divergence</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" id="js-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="gauge-values">
+                                <span id="js-value">0.00</span>
+                                <span class="gauge-threshold">/ 0.10</span>
+                            </div>
+                        </div>
+                        <div class="gauge" id="perf-gauge">
+                            <div class="gauge-label">Performance</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill ok" id="perf-fill" style="width: 80%"></div>
+                            </div>
+                            <div class="gauge-values">
+                                <span id="perf-value">OK</span>
+                                <span class="gauge-threshold">Stable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="drift-features" id="drifted-features">
+                        <p class="drift-status ok">✅ No features drifted</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Row 4: Deployment Timeline + Model Table -->
+        <section class="grid-row-4">
+            <div class="card" id="timeline-card">
+                <div class="card-header">
+                    <h2>🚀 Deployment Timeline</h2>
+                </div>
+                <div class="card-body">
+                    <div class="timeline" id="deployment-timeline">
+                        <div class="timeline-empty">No deployment events yet</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="models-card">
+                <div class="card-header">
+                    <h2>📊 Model Comparison</h2>
+                </div>
+                <div class="card-body">
+                    <table class="model-table" id="model-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>PR-AUC</th>
+                                <th>F1</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>Time (s)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="model-table-body">
+                            <tr><td colspan="6" class="empty-row">No tournament data</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>Financial AI MLOps Dashboard</span>
+        <span>Powered by Databricks + MLflow</span>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

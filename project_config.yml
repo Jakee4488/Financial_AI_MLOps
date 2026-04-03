@@ -1,0 +1,136 @@
+prd:
+  catalog_name: mlops_prd
+  schema_name: financial_transactions
+acc:
+  catalog_name: mlops_acc
+  schema_name: financial_transactions
+dev:
+  catalog_name: mlops_dev
+  schema_name: financial_transactions
+
+experiment_name_basic: /Shared/financial-anomaly-basic
+experiment_name_custom: /Shared/financial-anomaly-custom
+
+# Default parameters (used by LightGBM primary model)
+parameters:
+  learning_rate: 0.01
+  n_estimators: 1500
+  max_depth: 8
+  num_leaves: 63
+  min_child_samples: 20
+  colsample_bytree: 0.8
+  subsample: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+
+# Per-model hyperparameters for the 4-model tournament
+models:
+  lightgbm:
+    learning_rate: 0.01
+    n_estimators: 1500
+    max_depth: 8
+    num_leaves: 63
+    min_child_samples: 20
+    colsample_bytree: 0.8
+    subsample: 0.8
+    scale_pos_weight: 10
+  xgboost:
+    learning_rate: 0.01
+    n_estimators: 1200
+    max_depth: 8
+    scale_pos_weight: 10
+    eval_metric: aucpr
+    tree_method: hist
+  random_forest:
+    n_estimators: 500
+    max_depth: 12
+    min_samples_split: 5
+    class_weight: balanced
+  isolation_forest:
+    n_estimators: 300
+    contamination: 0.015
+    max_features: 0.8
+    random_state: 42
+
+# Champion/Challenger gating configuration
+champion_challenger:
+  primary_metric: pr_auc
+  secondary_metrics:
+    - f1_score
+    - precision
+    - recall
+  min_improvement_threshold: 0.005
+  require_all_metrics_improvement: false
+
+num_features:
+  - price
+  - volume
+  - price_change_pct
+  - volume_zscore
+  - price_volatility_1h
+  - trade_intensity_1m
+  - vwap_deviation
+  - bid_ask_spread_pct
+  - rsi_14
+  - macd_signal
+  - bollinger_position
+  - hour_of_day
+  - minute_of_hour
+
+cat_features:
+  - symbol
+  - exchange
+  - trade_type
+  - session_type
+
+target: is_anomaly
+
+# Finnhub WebSocket streaming configuration
+streaming:
+  finnhub_api_key: ${FINNHUB_API_KEY}
+  finnhub_ws_url: wss://ws.finnhub.io
+  finnhub_symbols:
+    - AAPL
+    - MSFT
+    - GOOGL
+    - AMZN
+    - TSLA
+    - META
+    - NVDA
+    - JPM
+    - BAC
+    - GS
+  batch_interval_seconds: 30
+  checkpoint_base: /Workspace/checkpoints/financial-anomaly
+  max_records_per_batch: 1000
+  watermark_delay: "2 minutes"
+  landing_zone_path: /mnt/streaming-landing/trades
+
+# Alpha Vantage historical configuration
+historical:
+  alphavantage_api_key: ${ALPHAVANTAGE_API_KEY}
+  alphavantage_base_url: https://www.alphavantage.co/query
+  symbols:
+    - AAPL
+    - MSFT
+    - GOOGL
+    - AMZN
+    - TSLA
+  interval: 5min
+  outputsize: full
+  rate_limit_sleep: 12
+  max_calls_per_day: 25
+
+# Drift detection configuration
+drift:
+  reference_window_days: 30
+  detection_interval_minutes: 60
+  psi_threshold: 0.2
+  js_divergence_threshold: 0.1
+  performance_degradation_threshold: 0.05
+
+# Retraining configuration
+retraining:
+  min_new_records: 5000
+  cooldown_hours: 6
+  max_retrain_per_day: 4

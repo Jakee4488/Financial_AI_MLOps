@@ -1,0 +1,111 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployment target (dev, acc, prd)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, acc, prd]
+
+env:
+  PYTHON_VERSION: "3.11"
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Validate bundle
+        run: databricks bundle validate -t dev
+
+      - name: Deploy to dev
+        run: |
+          databricks bundle deploy -t dev \
+            --var="git_sha=${{ github.sha }}" \
+            --var="branch=${{ github.ref_name }}" \
+            --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
+            --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+      - name: Run dev smoke tests
+        run: |
+          databricks bundle run financial-retraining-workflow -t dev --no-wait
+
+  deploy-acc:
+    name: Deploy to Acceptance
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main'
+    environment: acc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy to acc
+        run: |
+          databricks bundle deploy -t acc \
+            --var="git_sha=${{ github.sha }}" \
+            --var="branch=${{ github.ref_name }}" \
+            --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
+            --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+      - name: Run acceptance tests
+        run: |
+          databricks bundle run financial-retraining-workflow -t acc --no-wait
+
+  deploy-prd:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-acc
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: prd
+      url: https://dbc-e19e4d68-b1a4.cloud.databricks.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy to production
+        run: |
+          databricks bundle deploy -t prd \
+            --var="git_sha=${{ github.sha }}" \
+            --var="branch=${{ github.ref_name }}" \
+            --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
+            --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+  rollback:
+    name: Emergency Rollback
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy-prd.result == 'failure'
+    needs: deploy-prd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Rollback production
+        run: |
+          echo "Rolling back production deployment..."
+          databricks bundle deploy -t prd \
+            --var="git_sha=${{ github.event.before }}" \
+            --var="branch=main"
