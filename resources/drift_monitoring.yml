@@ -16,15 +16,3 @@ resources:
             base_parameters:
               catalog_name: ${var.catalog_name}
               schema_name: ${var.schema_name}
-          job_cluster_key: monitoring_cluster
-
-      job_clusters:
-        - job_cluster_key: monitoring_cluster
-          new_cluster:
-            spark_version: 15.4.x-cpu-ml-scala2.12
-            node_type_id: n1-standard-4
-            num_workers: 0
-            gcp_attributes:
-              availability: PREEMPTIBLE_WITH_FALLBACK_GCP
-            spark_conf:
-              "spark.databricks.delta.enableChangeDataFeed": "true"

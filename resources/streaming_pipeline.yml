@@ -5,6 +5,7 @@ resources:
       target: ${var.catalog_name}.${var.schema_name}
       development: true
       continuous: false  # Set to true for always-on streaming
+      serverless: true
       channel: "PREVIEW"
       edition: "ADVANCED"
       libraries:
@@ -16,8 +17,3 @@ resources:
             path: ../src/financial_transactions/dlt/gold_features.py
       configuration:
         "spark.databricks.delta.enableChangeDataFeed": "true"
-      clusters:
-        - label: "default"
-          autoscale:
-            min_workers: 1
-            max_workers: 4
