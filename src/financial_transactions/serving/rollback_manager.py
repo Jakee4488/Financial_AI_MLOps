@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
+import mlflow
 from loguru import logger
+
+from financial_transactions.serving.model_serving import AnomalyModelServing
 
 
 class RollbackManager:
@@ -31,7 +34,7 @@ class RollbackManager:
     def capture_state(self, model_version: str, endpoint_name: str) -> dict[str, Any]:
         """Capture current deployment state before changes."""
         snapshot = {
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            "timestamp": datetime.now(tz=UTC).isoformat(),
             "model_version": model_version,
             "endpoint_name": endpoint_name,
             "catalog": self.config.catalog_name,
@@ -54,8 +57,6 @@ class RollbackManager:
 
     def rollback_model(self, version: str) -> None:
         """Rollback model serving endpoint to a specific version."""
-        from financial_transactions.serving.model_serving import AnomalyModelServing
-
         model_name = f"{self.config.catalog_name}.{self.config.schema_name}.anomaly_model_champion"
         endpoint_name = f"anomaly-model-serving-{self.config.schema_name}"
 
@@ -78,8 +79,6 @@ class RollbackManager:
 
     def verify_rollback(self, expected_version: str | None = None) -> bool:
         """Verify that rollback was successful."""
-        import mlflow
-
         model_name = f"{self.config.catalog_name}.{self.config.schema_name}.anomaly_model_champion"
         try:
             client = mlflow.MlflowClient()

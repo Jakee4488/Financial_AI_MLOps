@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
@@ -48,7 +48,7 @@ class AlertManager:
             f"🔴 *Model Performance Degradation*\n"
             f"• Metrics: {json.dumps(metrics, indent=2)}\n"
             f"• Threshold: {threshold}\n"
-            f"• Time: {datetime.now(tz=timezone.utc).isoformat()}"
+            f"• Time: {datetime.now(tz=UTC).isoformat()}"
         )
         self._send(message, "performance_alert", metrics)
 
@@ -58,7 +58,7 @@ class AlertManager:
             f"🔄 *Retraining Triggered*\n"
             f"• Reason: {reason}\n"
             f"• Model: {model_type}\n"
-            f"• Time: {datetime.now(tz=timezone.utc).isoformat()}"
+            f"• Time: {datetime.now(tz=UTC).isoformat()}"
         )
         self._send(message, "retraining_trigger", {"reason": reason, "model_type": model_type})
 
@@ -68,7 +68,7 @@ class AlertManager:
         message = (
             f"{icon} *Deployment Decision: {decision}*\n"
             f"• Model: {model_type} v{version}\n"
-            f"• Time: {datetime.now(tz=timezone.utc).isoformat()}"
+            f"• Time: {datetime.now(tz=UTC).isoformat()}"
         )
         self._send(message, "deployment", {"version": version, "model_type": model_type, "decision": decision})
 
@@ -91,7 +91,7 @@ class AlertManager:
         from pyspark.sql import Row
 
         row = Row(
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
             alert_type=alert_type,
             message=message[:500],
             data=json.dumps(data) if data else "{}",

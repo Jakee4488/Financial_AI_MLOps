@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 import os
+import sys
+
+# Guarantee src/ takes absolute priority over local namespace package shadowing
+sys.path.insert(0, os.path.abspath("src"))
+
 from typing import Any
 
 import pandas as pd
@@ -13,8 +18,13 @@ from pyspark.sql import SparkSession
 @pytest.fixture(scope="session")
 def spark() -> SparkSession:
     """Provide a SparkSession for testing."""
+    import importlib.util
+
+    if importlib.util.find_spec("databricks.connect") is not None:
+        pytest.skip("Spark tests skipped because databricks-connect is installed (no local SparkSession).")
+
     os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
-    
+
     spark = (
         SparkSession.builder.master("local[2]")
         .appName("FinancialTransactionsTesting")
@@ -23,7 +33,7 @@ def spark() -> SparkSession:
         .config("spark.sql.session.timeZone", "UTC")
         .getOrCreate()
     )
-    
+
     yield spark
     spark.stop()
 
@@ -42,18 +52,14 @@ def mock_config_path(tmp_path: Any) -> str:
         "num_features": ["price", "volume"],
         "cat_features": ["symbol", "session_type"],
         "target": "is_anomaly",
-        "streaming": {
-            "finnhub_symbols": ["AAPL", "MSFT"]
-        },
-        "drift": {
-            "psi_threshold": 0.15
-        }
+        "streaming": {"finnhub_symbols": ["AAPL", "MSFT"]},
+        "drift": {"psi_threshold": 0.15},
     }
-    
+
     config_path = tmp_path / "mock_config.yml"
     with open(config_path, "w") as f:
         yaml.dump(config_data, f)
-        
+
     return str(config_path)
 
 
@@ -67,6 +73,6 @@ def sample_trade_data() -> pd.DataFrame:
         "volume": [100, 200, 150, 50, 60],
         "timestamp": pd.date_range(start="2026-04-01 10:00:00", periods=5, freq="5min", tz="UTC"),
         "exchange": ["US", "US", "US", "US", "US"],
-        "session_type": ["regular", "regular", "regular", "regular", "regular"]
+        "session_type": ["regular", "regular", "regular", "regular", "regular"],
     }
     return pd.DataFrame(data)

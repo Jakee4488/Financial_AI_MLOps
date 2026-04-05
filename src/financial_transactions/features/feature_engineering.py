@@ -48,7 +48,7 @@ class FeatureEngineer:
         # Sort by symbol and timestamp
         df = df.sort_values(["symbol", "timestamp"]).reset_index(drop=True)
 
-        # Group by symbol for windowed features
+        processed_dfs = []
         for symbol in df["symbol"].unique():
             mask = df["symbol"] == symbol
             symbol_data = df.loc[mask].copy()
@@ -78,7 +78,9 @@ class FeatureEngineer:
             # VWAP deviation
             rolling_vwap_num = (symbol_data["price"] * symbol_data["volume"]).rolling(14, min_periods=1).sum()
             rolling_vwap_den = symbol_data["volume"].rolling(14, min_periods=1).sum()
-            symbol_data["vwap"] = np.where(rolling_vwap_den > 0, rolling_vwap_num / rolling_vwap_den, symbol_data["price"])
+            symbol_data["vwap"] = np.where(
+                rolling_vwap_den > 0, rolling_vwap_num / rolling_vwap_den, symbol_data["price"]
+            )
             symbol_data["vwap_deviation"] = np.where(
                 symbol_data["vwap"] > 0,
                 ((symbol_data["price"] - symbol_data["vwap"]) / symbol_data["vwap"]) * 100,
@@ -107,20 +109,29 @@ class FeatureEngineer:
                 0.5,
             )
 
-            # Bid-ask spread proxy
-            symbol_data["bid_ask_spread_pct"] = np.where(
+            bid_ask_spread_pct = np.where(
                 symbol_data["price"] > 0,
                 (symbol_data["rolling_std_price"] / symbol_data["price"]) * 100,
                 0.0,
             )
+            symbol_data["bid_ask_spread_pct"] = bid_ask_spread_pct
 
-            df.loc[mask] = symbol_data
+            processed_dfs.append(symbol_data)
+
+        if processed_dfs:
+            df = pd.concat(processed_dfs, ignore_index=True)
 
         # Fill NaN from rolling window edges
         feature_cols = [
-            "price_change_pct", "volume_zscore", "price_volatility_1h",
-            "trade_intensity_1m", "vwap_deviation", "rsi_14",
-            "macd_signal", "bollinger_position", "bid_ask_spread_pct",
+            "price_change_pct",
+            "volume_zscore",
+            "price_volatility_1h",
+            "trade_intensity_1m",
+            "vwap_deviation",
+            "rsi_14",
+            "macd_signal",
+            "bollinger_position",
+            "bid_ask_spread_pct",
         ]
         df[feature_cols] = df[feature_cols].fillna(0)
 
@@ -159,9 +170,7 @@ class FeatureEngineer:
         rsi_extreme = (df["rsi_14"] > 85) | (df["rsi_14"] < 15)
         bollinger_break = (df["bollinger_position"] > 1.0) | (df["bollinger_position"] < 0.0)
 
-        df[self.target] = (
-            (volume_anomaly & price_anomaly) | rsi_extreme | bollinger_break
-        ).astype(int)
+        df[self.target] = ((volume_anomaly & price_anomaly) | rsi_extreme | bollinger_break).astype(int)
 
         anomaly_rate = df[self.target].mean() * 100
         logger.info(f"Generated anomaly labels: {anomaly_rate:.2f}% anomaly rate ({df[self.target].sum()}/{len(df)})")
@@ -189,7 +198,9 @@ class FeatureEngineer:
         df_subset = df[available].dropna(subset=[self.target])
 
         train_set, test_set = train_test_split(
-            df_subset, test_size=test_size, random_state=random_state,
+            df_subset,
+            test_size=test_size,
+            random_state=random_state,
             stratify=df_subset[self.target],
         )
 

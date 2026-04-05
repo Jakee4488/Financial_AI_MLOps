@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-import numpy as np
 from loguru import logger
 
 
@@ -41,11 +40,11 @@ class ABTestManager:
         :return: Experiment configuration
         """
         experiment = {
-            "id": f"ab_{datetime.now(tz=timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+            "id": f"ab_{datetime.now(tz=UTC).strftime('%Y%m%d_%H%M%S')}",
             "control_version": control_version,
             "treatment_version": treatment_version,
             "traffic_split": traffic_split,
-            "start_time": datetime.now(tz=timezone.utc).isoformat(),
+            "start_time": datetime.now(tz=UTC).isoformat(),
             "status": "running",
             "control_metrics": {},
             "treatment_metrics": {},
@@ -101,7 +100,7 @@ class ABTestManager:
             "control_version": exp["control_version"],
             "treatment_version": exp["treatment_version"],
             "decision": "NEEDS_MORE_DATA",
-            "conclusion_time": datetime.now(tz=timezone.utc).isoformat(),
+            "conclusion_time": datetime.now(tz=UTC).isoformat(),
         }
 
         control_metrics = exp.get("control_metrics", {})

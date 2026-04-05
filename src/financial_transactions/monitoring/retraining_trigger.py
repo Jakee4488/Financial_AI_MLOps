@@ -6,7 +6,7 @@ performance metrics, and data volume, then dispatches retraining jobs.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from loguru import logger
@@ -58,9 +58,12 @@ class RetrainingTrigger:
         # Check performance degradation
         if current_metrics and baseline_metrics:
             for metric in ["pr_auc", "f1_score"]:
-                if metric in current_metrics and metric in baseline_metrics:
-                    if baseline_metrics[metric] - current_metrics[metric] > 0.05:
-                        reasons.append(f"performance_degradation_{metric}")
+                if (
+                    metric in current_metrics
+                    and metric in baseline_metrics
+                    and baseline_metrics[metric] - current_metrics[metric] > 0.05
+                ):
+                    reasons.append(f"performance_degradation_{metric}")
 
         # Check data volume
         if new_record_count >= self.min_records:
@@ -101,7 +104,7 @@ class RetrainingTrigger:
             if last_run is None:
                 return True
 
-            elapsed = (datetime.now(tz=timezone.utc) - last_run).total_seconds() / 3600
+            elapsed = (datetime.now(tz=UTC) - last_run).total_seconds() / 3600
             return elapsed >= self.cooldown_hours
         except Exception:
             return True  # Allow if audit table doesn't exist
@@ -151,7 +154,7 @@ class RetrainingTrigger:
         from pyspark.sql import Row
 
         row = Row(
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
             event_type=event_type,
             details=json.dumps(details or {}),
         )

@@ -37,8 +37,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          uv run pytest tests/ -m "not ci_exclude" -v --tb=short \
-            --junitxml=test-results.xml
+          PYTHONPATH="$GITHUB_WORKSPACE/src" python -m pytest tests/ -m "not ci_exclude" -v --tb=short --junitxml=test-results.xml
 
       - name: Upload test results
         if: always()
@@ -90,8 +89,22 @@ jobs:
     name: Validate Databricks Bundle
     runs-on: ubuntu-latest
     needs: lint-and-test
+    if: >
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v4
+
+      - name: Ensure Databricks secrets are present
+        shell: bash
+        run: |
+          if [[ -z "${DATABRICKS_HOST}" || -z "${DATABRICKS_TOKEN}" ]]; then
+            echo "Missing DATABRICKS_HOST / DATABRICKS_TOKEN. Configure repo/environment secrets."
+            exit 1
+          fi
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: Install Databricks CLI
         run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh

@@ -33,8 +33,7 @@ def silver_trades():
     bronze = dlt.read_stream("bronze_trades")
 
     return (
-        bronze
-        .dropDuplicates(["trade_id"])
+        bronze.dropDuplicates(["trade_id"])
         # Cast types
         .withColumn("price", F.col("price").cast("double"))
         .withColumn("volume", F.col("volume").cast("double"))
@@ -43,23 +42,19 @@ def silver_trades():
         .withColumn("hour_of_day", F.hour(F.col("timestamp")))
         .withColumn("minute_of_hour", F.minute(F.col("timestamp")))
         .withColumn("day_of_week", F.dayofweek(F.col("timestamp")))
-        .withColumn("is_weekend", F.when(
-            F.dayofweek(F.col("timestamp")).isin(1, 7), True
-        ).otherwise(False))
+        .withColumn("is_weekend", F.when(F.dayofweek(F.col("timestamp")).isin(1, 7), True).otherwise(False))
         # Session type (US market hours in UTC: 14:30 - 21:00)
-        .withColumn("session_type", F.when(
-            (F.hour(F.col("timestamp")) >= 14) & (F.hour(F.col("timestamp")) < 21),
-            "regular"
-        ).when(
-            F.hour(F.col("timestamp")) < 14,
-            "pre_market"
-        ).otherwise("after_hours"))
+        .withColumn(
+            "session_type",
+            F.when((F.hour(F.col("timestamp")) >= 14) & (F.hour(F.col("timestamp")) < 21), "regular")
+            .when(F.hour(F.col("timestamp")) < 14, "pre_market")
+            .otherwise("after_hours"),
+        )
         # Trade type classification
-        .withColumn("trade_type", F.when(
-            F.col("volume") >= 10000, "block"
-        ).when(
-            F.col("volume") >= 100, "standard"
-        ).otherwise("odd_lot"))
+        .withColumn(
+            "trade_type",
+            F.when(F.col("volume") >= 10000, "block").when(F.col("volume") >= 100, "standard").otherwise("odd_lot"),
+        )
         # Fill nulls
         .fillna({"volume": 0.0, "exchange": "US"})
         .withColumn("_processed_at", F.current_timestamp())

@@ -47,17 +47,12 @@ class FeatureStoreManager:
 
         logger.info(f"Writing features to {self.feature_table_name} (mode={mode})")
 
-        features_with_ts = features_df.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        )
+        features_with_ts = features_df.withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
 
         features_with_ts.write.format("delta").mode(mode).saveAsTable(self.feature_table_name)
 
         # Enable CDF for monitoring
-        self.spark.sql(
-            f"ALTER TABLE {self.feature_table_name} "
-            "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
-        )
+        self.spark.sql(f"ALTER TABLE {self.feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
 
         count = self.spark.table(self.feature_table_name).count()
         logger.info(f"Feature table {self.feature_table_name} now has {count} records")
@@ -78,15 +73,10 @@ class FeatureStoreManager:
             (train_df, self.train_table_name, "train"),
             (test_df, self.test_table_name, "test"),
         ]:
-            df_with_ts = df.withColumn(
-                "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-            )
+            df_with_ts = df.withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
             df_with_ts.write.mode("overwrite").saveAsTable(table_name)
 
-            self.spark.sql(
-                f"ALTER TABLE {table_name} "
-                "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
-            )
+            self.spark.sql(f"ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
             logger.info(f"Saved {label} set to {table_name} ({df.count()} records)")
 
     def get_training_set(self) -> tuple[Any, Any]:

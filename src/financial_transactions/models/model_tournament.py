@@ -8,7 +8,7 @@ as the "challenger" for the champion/challenger gate.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import pandas as pd
 from loguru import logger
@@ -95,17 +95,18 @@ class ModelTournament:
                 results.append(result)
 
                 logger.info(
-                    f"✅ {model_name}: {self.primary_metric}={metrics.get(self.primary_metric, 0):.4f} "
-                    f"({elapsed:.1f}s)"
+                    f"✅ {model_name}: {self.primary_metric}={metrics.get(self.primary_metric, 0):.4f} ({elapsed:.1f}s)"
                 )
 
             except Exception:
                 logger.exception(f"❌ {model_name} failed during tournament")
-                results.append(ModelResult(
-                    model_name=model_name,
-                    model_type=model_class.__init__.__defaults__[0] if hasattr(model_class.__init__, '__defaults__') else "unknown",
-                    metrics={self.primary_metric: 0.0},
-                ))
+                results.append(
+                    ModelResult(
+                        model_name=model_name,
+                        model_type=model_name,
+                        metrics={self.primary_metric: 0.0},
+                    )
+                )
 
         # Rank by primary metric (descending)
         results.sort(key=lambda r: r.metrics.get(self.primary_metric, 0), reverse=True)
@@ -118,8 +119,10 @@ class ModelTournament:
         logger.info("\n" + "=" * 60)
         logger.info("🏆 Tournament Results:")
         logger.info(f"\n{comparison_table.to_string()}")
-        logger.info(f"\n🥇 Winner: {results[0].model_type} "
-                    f"({self.primary_metric}={results[0].metrics.get(self.primary_metric, 0):.4f})")
+        logger.info(
+            f"\n🥇 Winner: {results[0].model_type} "
+            f"({self.primary_metric}={results[0].metrics.get(self.primary_metric, 0):.4f})"
+        )
         logger.info(f"⏱️ Total tournament time: {tournament_time:.1f}s")
         logger.info("=" * 60)
 
@@ -162,9 +165,7 @@ class ModelTournament:
         mlflow.set_experiment(self.config.experiment_name_basic)
         with mlflow.start_run(run_name="tournament-summary", tags=self.tags.to_dict()):
             # Log winner metrics
-            mlflow.log_metrics({
-                f"winner_{k}": v for k, v in result.challenger.metrics.items()
-            })
+            mlflow.log_metrics({f"winner_{k}": v for k, v in result.challenger.metrics.items()})
             mlflow.log_param("winner_model_type", result.challenger.model_type)
             mlflow.log_metric("tournament_time_seconds", result.tournament_time_seconds)
             mlflow.log_metric("num_models", len(result.all_results))
@@ -174,8 +175,7 @@ class ModelTournament:
                 tournament_data = {
                     "winner": result.challenger.model_type,
                     "results": [
-                        {"model": r.model_type, "metrics": r.metrics, "run_id": r.run_id}
-                        for r in result.all_results
+                        {"model": r.model_type, "metrics": r.metrics, "run_id": r.run_id} for r in result.all_results
                     ],
                 }
                 json.dump(tournament_data, f, indent=2)

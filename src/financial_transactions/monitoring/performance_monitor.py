@@ -69,8 +69,7 @@ class PerformanceMonitor:
                 ),
             )
             self.spark.sql(
-                f"ALTER TABLE {self.monitoring_table} "
-                "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+                f"ALTER TABLE {self.monitoring_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
             )
             logger.info("Monitoring table created")
 

@@ -23,18 +23,42 @@ def export_sample_data(output_dir: str) -> None:
         "winner": "xgboost",
         "timestamp": "2026-04-03T16:00:00Z",
         "results": [
-            {"model": "lightgbm", "metrics": {"pr_auc": 0.892, "f1_score": 0.761, "precision": 0.834, "recall": 0.699}, "training_time_s": 12.3},
-            {"model": "xgboost", "metrics": {"pr_auc": 0.915, "f1_score": 0.783, "precision": 0.851, "recall": 0.724}, "training_time_s": 15.7},
-            {"model": "random_forest", "metrics": {"pr_auc": 0.847, "f1_score": 0.712, "precision": 0.795, "recall": 0.645}, "training_time_s": 8.2},
-            {"model": "isolation_forest", "metrics": {"pr_auc": 0.821, "f1_score": 0.689, "precision": 0.743, "recall": 0.642}, "training_time_s": 4.1},
+            {
+                "model": "lightgbm",
+                "metrics": {"pr_auc": 0.892, "f1_score": 0.761, "precision": 0.834, "recall": 0.699},
+                "training_time_s": 12.3,
+            },
+            {
+                "model": "xgboost",
+                "metrics": {"pr_auc": 0.915, "f1_score": 0.783, "precision": 0.851, "recall": 0.724},
+                "training_time_s": 15.7,
+            },
+            {
+                "model": "random_forest",
+                "metrics": {"pr_auc": 0.847, "f1_score": 0.712, "precision": 0.795, "recall": 0.645},
+                "training_time_s": 8.2,
+            },
+            {
+                "model": "isolation_forest",
+                "metrics": {"pr_auc": 0.821, "f1_score": 0.689, "precision": 0.743, "recall": 0.642},
+                "training_time_s": 4.1,
+            },
         ],
     }
     _write_json(output_dir, "tournament_results.json", tournament)
 
     # Champion history
     champion = {
-        "champion": {"model_type": "xgboost", "version": "12", "metrics": {"pr_auc": 0.908, "f1_score": 0.775, "precision": 0.842, "recall": 0.717}},
-        "challenger": {"model_type": "xgboost", "version": "13", "metrics": {"pr_auc": 0.915, "f1_score": 0.783, "precision": 0.851, "recall": 0.724}},
+        "champion": {
+            "model_type": "xgboost",
+            "version": "12",
+            "metrics": {"pr_auc": 0.908, "f1_score": 0.775, "precision": 0.842, "recall": 0.717},
+        },
+        "challenger": {
+            "model_type": "xgboost",
+            "version": "13",
+            "metrics": {"pr_auc": 0.915, "f1_score": 0.783, "precision": 0.851, "recall": 0.724},
+        },
         "decision": "PROMOTE",
         "improvement": {"pr_auc": 0.007, "f1_score": 0.008, "precision": 0.009, "recall": 0.007},
     }
@@ -66,7 +90,13 @@ def export_sample_data(output_dir: str) -> None:
     # Deployment events
     events = [
         {"type": "deploy", "version": "13", "model": "xgboost", "time": "2h ago", "decision": "PROMOTE"},
-        {"type": "rollback", "version": "11", "model": "lightgbm", "time": "1d ago", "reason": "Performance degradation"},
+        {
+            "type": "rollback",
+            "version": "11",
+            "model": "lightgbm",
+            "time": "1d ago",
+            "reason": "Performance degradation",
+        },
         {"type": "deploy", "version": "12", "model": "xgboost", "time": "3d ago", "decision": "PROMOTE"},
         {"type": "retrain", "version": "12", "model": "xgboost", "time": "3d ago", "reason": "Data drift detected"},
         {"type": "deploy", "version": "10", "model": "lightgbm", "time": "7d ago", "decision": "PROMOTE"},

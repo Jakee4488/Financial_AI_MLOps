@@ -90,7 +90,7 @@ class ProjectConfig(BaseModel):
     retraining: RetrainingConfig = RetrainingConfig()
 
     @classmethod
-    def from_yaml(cls, config_path: str, env: str = "dev") -> "ProjectConfig":
+    def from_yaml(cls, config_path: str, env: str = "dev") -> ProjectConfig:
         """Load and parse configuration from a YAML file.
 
         :param config_path: Path to the YAML configuration file
@@ -115,9 +115,7 @@ class ProjectConfig(BaseModel):
             if "retraining" in config_dict:
                 config_dict["retraining"] = RetrainingConfig(**config_dict["retraining"])
             if "champion_challenger" in config_dict:
-                config_dict["champion_challenger"] = ChampionChallengerConfig(
-                    **config_dict["champion_challenger"]
-                )
+                config_dict["champion_challenger"] = ChampionChallengerConfig(**config_dict["champion_challenger"])
 
             return cls(**config_dict)
 

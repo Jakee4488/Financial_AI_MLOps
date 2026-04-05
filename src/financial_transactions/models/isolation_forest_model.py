@@ -49,7 +49,7 @@ class IsolationForestModel(BaseAnomalyModel):
             remainder="passthrough",
         )
 
-        iso_params = {k: v for k, v in self.params.items()}
+        iso_params = dict(self.params.items())
 
         self.pipeline = Pipeline(
             steps=[

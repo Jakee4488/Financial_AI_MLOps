@@ -39,18 +39,21 @@ class RandomForestModel(BaseAnomalyModel):
             remainder="passthrough",
         )
 
-        rf_params = {k: v for k, v in self.params.items()}
+        rf_params = dict(self.params.items())
         class_weight = rf_params.pop("class_weight", "balanced")
 
         self.pipeline = Pipeline(
             steps=[
                 ("preprocessor", preprocessor),
-                ("classifier", RandomForestClassifier(
-                    class_weight=class_weight,
-                    random_state=42,
-                    n_jobs=-1,
-                    **rf_params,
-                )),
+                (
+                    "classifier",
+                    RandomForestClassifier(
+                        class_weight=class_weight,
+                        random_state=42,
+                        n_jobs=-1,
+                        **rf_params,
+                    ),
+                ),
             ]
         )
 

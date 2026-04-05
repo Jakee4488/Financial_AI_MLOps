@@ -41,9 +41,7 @@ class AnomalyModelWrapper(mlflow.pyfunc.PythonModel):
         """Load the underlying sklearn pipeline."""
         self.model = mlflow.sklearn.load_model(context.artifacts["anomaly-pipeline"])
 
-    def predict(
-        self, context: PythonModelContext, model_input: pd.DataFrame | np.ndarray
-    ) -> dict:
+    def predict(self, context: PythonModelContext, model_input: pd.DataFrame | np.ndarray) -> dict:
         """Predict with enriched output.
 
         :param context: MLflow model context
@@ -57,6 +55,7 @@ class AnomalyModelWrapper(mlflow.pyfunc.PythonModel):
             probabilities = self.model.predict_proba(model_input)[:, 1].tolist()
         elif hasattr(self.model, "decision_function"):
             from scipy.special import expit
+
             raw_scores = self.model.decision_function(model_input)
             probabilities = expit(-raw_scores * 2).tolist()
         else:

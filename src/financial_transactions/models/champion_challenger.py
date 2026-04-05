@@ -8,7 +8,7 @@ sufficient improvement on the primary metric.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import mlflow
@@ -33,7 +33,7 @@ class ComparisonResult:
 
     def __post_init__(self) -> None:
         if not self.timestamp:
-            self.timestamp = datetime.now(tz=timezone.utc).isoformat()
+            self.timestamp = datetime.now(tz=UTC).isoformat()
 
 
 class ChampionChallenger:
@@ -70,9 +70,7 @@ class ChampionChallenger:
         """
         client = MlflowClient()
         try:
-            champion_version = client.get_model_version_by_alias(
-                name=self.model_name, alias="champion"
-            )
+            champion_version = client.get_model_version_by_alias(name=self.model_name, alias="champion")
             champion_run = client.get_run(champion_version.run_id)
             metrics = {k: float(v) for k, v in champion_run.data.metrics.items()}
             logger.info(f"Current champion: v{champion_version.version}, metrics: {metrics}")
@@ -102,7 +100,7 @@ class ChampionChallenger:
                 reason="No existing champion — first model auto-promoted",
                 challenger_metrics=challenger_metrics,
                 champion_metrics={},
-                improvement={k: v for k, v in challenger_metrics.items()},
+                improvement=dict(challenger_metrics.items()),
             )
 
         # Compute improvements
@@ -125,18 +123,19 @@ class ChampionChallenger:
         else:
             decision = "REJECT"
             reason = (
-                f"Insufficient improvement on {self.primary_metric}: "
-                f"{primary_improvement:.4f} < {self.min_threshold}"
+                f"Insufficient improvement on {self.primary_metric}: {primary_improvement:.4f} < {self.min_threshold}"
             )
             logger.info(f"❌ {reason}")
 
         # Log comparison details
-        comparison_df = pd.DataFrame({
-            "metric": list(challenger_metrics.keys()),
-            "challenger": list(challenger_metrics.values()),
-            "champion": [champion_metrics.get(k, 0) for k in challenger_metrics],
-            "improvement": [improvement.get(k, 0) for k in challenger_metrics],
-        })
+        comparison_df = pd.DataFrame(
+            {
+                "metric": list(challenger_metrics.keys()),
+                "challenger": list(challenger_metrics.values()),
+                "champion": [champion_metrics.get(k, 0) for k in challenger_metrics],
+                "improvement": [improvement.get(k, 0) for k in challenger_metrics],
+            }
+        )
         logger.info(f"\n{comparison_df.to_string()}")
         logger.info(f"\nDecision: {decision}")
 
