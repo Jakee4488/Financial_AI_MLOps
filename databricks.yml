@@ -29,6 +29,12 @@ variables:
   stream_checkpoint_path:
     description: Streaming checkpoint base path
     default: /Workspace/checkpoints/financial-anomaly
+  catalog_name:
+    description: Unity Catalog name
+    default: mlops_dev
+  schema_name:
+    description: Schema database name
+    default: financial_transactions
 
 targets:
   dev:
@@ -39,6 +45,8 @@ targets:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: PAUSED
+      catalog_name: mlops_dev
+      schema_name: financial_transactions
 
   acc:
     presets:
@@ -48,6 +56,8 @@ targets:
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: PAUSED
+      catalog_name: mlops_acc
+      schema_name: financial_transactions
 
   prd:
     mode: production
@@ -56,3 +66,5 @@ targets:
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: PAUSED  # normally UNPAUSED
+      catalog_name: mlops_prd
+      schema_name: financial_transactions
