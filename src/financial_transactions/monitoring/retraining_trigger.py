@@ -58,9 +58,12 @@ class RetrainingTrigger:
         # Check performance degradation
         if current_metrics and baseline_metrics:
             for metric in ["pr_auc", "f1_score"]:
-                if metric in current_metrics and metric in baseline_metrics:
-                    if baseline_metrics[metric] - current_metrics[metric] > 0.05:
-                        reasons.append(f"performance_degradation_{metric}")
+                if (
+                    metric in current_metrics
+                    and metric in baseline_metrics
+                    and baseline_metrics[metric] - current_metrics[metric] > 0.05
+                ):
+                    reasons.append(f"performance_degradation_{metric}")
 
         # Check data volume
         if new_record_count >= self.min_records:

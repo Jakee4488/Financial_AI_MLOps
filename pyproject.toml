@@ -86,7 +86,12 @@ lint.ignore = [
     "C901", # too complex
     "ERA001", # commented out code
     "D100", # missing docstring
+    "D105", # missing docstring in magic method
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
 ]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN"]
+"src/financial_transactions/dlt/*" = ["ANN", "F821", "F841"]
 
 [tool.ruff.format]
 indent-style = "space"

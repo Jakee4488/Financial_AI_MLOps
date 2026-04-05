@@ -39,7 +39,7 @@ class XGBoostModel(BaseAnomalyModel):
             remainder="passthrough",
         )
 
-        xgb_params = {k: v for k, v in self.params.items()}
+        xgb_params = dict(self.params.items())
         scale = xgb_params.pop("scale_pos_weight", 1)
         eval_metric = xgb_params.pop("eval_metric", "aucpr")
 

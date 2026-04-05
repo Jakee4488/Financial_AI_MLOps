@@ -39,7 +39,7 @@ class RandomForestModel(BaseAnomalyModel):
             remainder="passthrough",
         )
 
-        rf_params = {k: v for k, v in self.params.items()}
+        rf_params = dict(self.params.items())
         class_weight = rf_params.pop("class_weight", "balanced")
 
         self.pipeline = Pipeline(

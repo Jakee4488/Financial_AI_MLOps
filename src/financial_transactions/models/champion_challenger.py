@@ -100,7 +100,7 @@ class ChampionChallenger:
                 reason="No existing champion — first model auto-promoted",
                 challenger_metrics=challenger_metrics,
                 champion_metrics={},
-                improvement={k: v for k, v in challenger_metrics.items()},
+                improvement=dict(challenger_metrics.items()),
             )
 
         # Compute improvements
