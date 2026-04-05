@@ -45,7 +45,7 @@ jobs:
 
       - name: Run dev smoke tests
         run: |
-          databricks bundle run financial-retraining-workflow -t dev --no-wait
+          databricks bundle run financial_retraining_workflow -t dev --no-wait
 
   deploy-acc:
     name: Deploy to Acceptance
@@ -69,7 +69,7 @@ jobs:
 
       - name: Run acceptance tests
         run: |
-          databricks bundle run financial-retraining-workflow -t acc --no-wait
+          databricks bundle run financial_retraining_workflow -t acc --no-wait
 
   deploy-prd:
     name: Deploy to Production
