@@ -35,7 +35,7 @@ targets:
     default: true
     mode: development
     workspace:
-      host: https://dbc-e19e4d68-b1a4.cloud.databricks.com
+      host: https://<YOUR_WORKSPACE_ID>.x.gcp.databricks.com
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
       profile: dev
     variables:
@@ -45,7 +45,7 @@ targets:
     presets:
       name_prefix: 'acc_'
     workspace:
-      host: https://dbc-e19e4d68-b1a4.cloud.databricks.com
+      host: https://<YOUR_WORKSPACE_ID>.x.gcp.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
       profile: acc
     variables:
@@ -54,7 +54,7 @@ targets:
   prd:
     mode: production
     workspace:
-      host: https://dbc-e19e4d68-b1a4.cloud.databricks.com
+      host: https://<YOUR_WORKSPACE_ID>.x.gcp.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
       profile: prd
     variables:

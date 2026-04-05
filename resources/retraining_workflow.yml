@@ -3,6 +3,8 @@ resources:
     financial_retraining_workflow:
       name: financial-retraining-workflow
       schedule:
+        quartz_cron_expression: "0 0 0 * * ?"
+        timezone_id: UTC
         pause_status: ${var.schedule_pause_status}
       tags:
         project: financial-ai-mlops
@@ -30,7 +32,9 @@ resources:
         - job_cluster_key: ml_cluster
           new_cluster:
             spark_version: 15.4.x-cpu-ml-scala2.12
-            node_type_id: Standard_DS3_v2
+            node_type_id: n1-standard-4
             num_workers: 1
+            gcp_attributes:
+              availability: PREEMPTIBLE_WITH_FALLBACK_GCP
             spark_conf:
               "spark.databricks.delta.enableChangeDataFeed": "true"
