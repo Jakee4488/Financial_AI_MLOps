@@ -37,8 +37,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE/src" uv run python -m pytest tests/ -m "not ci_exclude" -v --tb=short \
-            --junitxml=test-results.xml
+          PYTHONPATH="$GITHUB_WORKSPACE/src" python -m pytest tests/ -m "not ci_exclude" -v --tb=short --junitxml=test-results.xml
 
       - name: Upload test results
         if: always()
