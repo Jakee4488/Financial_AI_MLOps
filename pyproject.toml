@@ -54,7 +54,7 @@ version = { file = "version.txt" }
 
 [tool.pytest.ini_options]
 testpaths = [ "tests" ]
-pythonpath = [ "." ]
+pythonpath = [ "src" ]
 markers = [
     "ci_exclude: Tests excluded from CI/CD pipeline"
 ]
