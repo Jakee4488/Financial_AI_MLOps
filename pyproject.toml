@@ -28,7 +28,8 @@ dynamic = ['version']
 dev = ["databricks-connect>=16.0, <17",
        "ipykernel>=6.29.5, <7",
        "pip>=25.0.1, <26",
-       "pre-commit>=4.1.0, <5"]
+       "pre-commit>=4.1.0, <5",
+       "ruff>=0.4.0"]
 
 streaming = ["confluent-kafka>=2.3.0, <3",
              "azure-eventhub>=5.11.0, <6"]
