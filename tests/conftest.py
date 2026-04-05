@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import sys
 import os
+
+# Guarantee src/ takes absolute priority over local namespace package shadowing
+sys.path.insert(0, os.path.abspath("src"))
+
 from typing import Any
 
 import pandas as pd
