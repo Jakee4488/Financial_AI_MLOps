@@ -37,7 +37,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          uv run pytest tests/ -m "not ci_exclude" -v --tb=short \
+          PYTHONPATH=src uv run pytest tests/ -m "not ci_exclude" -v --tb=short \
             --junitxml=test-results.xml
 
       - name: Upload test results
