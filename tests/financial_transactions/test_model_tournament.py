@@ -58,10 +58,16 @@ def test_run_tournament(mock_lgbm, mock_xgb, mock_rf, mock_iso, mock_config_path
         model_name="", model_type="isolation_forest", metrics={"pr_auc": 0.70}
     )
 
+    mock_lgbm.__name__ = "LightGBMModel"
+    mock_xgb.__name__ = "XGBoostModel"
+    mock_rf.__name__ = "RandomForestModel"
+    mock_iso.__name__ = "IsolationForestModel"
+
     config = ProjectConfig.from_yaml(mock_config_path, env="dev")
     tags = Tags(git_sha="123", branch="main")
 
     tournament = ModelTournament(config, tags, spark=MagicMock())
+    tournament.MODEL_CLASSES = [mock_lgbm, mock_xgb, mock_rf, mock_iso]
     result = tournament.run_tournament()
 
     assert len(result.all_results) == 4

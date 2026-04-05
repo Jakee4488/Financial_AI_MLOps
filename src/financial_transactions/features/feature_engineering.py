@@ -48,7 +48,7 @@ class FeatureEngineer:
         # Sort by symbol and timestamp
         df = df.sort_values(["symbol", "timestamp"]).reset_index(drop=True)
 
-        # Group by symbol for windowed features
+        processed_dfs = []
         for symbol in df["symbol"].unique():
             mask = df["symbol"] == symbol
             symbol_data = df.loc[mask].copy()
@@ -109,14 +109,17 @@ class FeatureEngineer:
                 0.5,
             )
 
-            # Bid-ask spread proxy
-            symbol_data["bid_ask_spread_pct"] = np.where(
+            bid_ask_spread_pct = np.where(
                 symbol_data["price"] > 0,
                 (symbol_data["rolling_std_price"] / symbol_data["price"]) * 100,
                 0.0,
             )
+            symbol_data["bid_ask_spread_pct"] = bid_ask_spread_pct
 
-            df.loc[mask] = symbol_data
+            processed_dfs.append(symbol_data)
+
+        if processed_dfs:
+            df = pd.concat(processed_dfs, ignore_index=True)
 
         # Fill NaN from rolling window edges
         feature_cols = [

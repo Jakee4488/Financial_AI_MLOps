@@ -103,9 +103,7 @@ class ModelTournament:
                 results.append(
                     ModelResult(
                         model_name=model_name,
-                        model_type=model_class.__init__.__defaults__[0]
-                        if hasattr(model_class.__init__, "__defaults__")
-                        else "unknown",
+                        model_type=model_name,
                         metrics={self.primary_metric: 0.0},
                     )
                 )

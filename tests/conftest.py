@@ -18,6 +18,11 @@ from pyspark.sql import SparkSession
 @pytest.fixture(scope="session")
 def spark() -> SparkSession:
     """Provide a SparkSession for testing."""
+    import importlib.util
+
+    if importlib.util.find_spec("databricks.connect") is not None:
+        pytest.skip("Spark tests skipped because databricks-connect is installed (no local SparkSession).")
+
     os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
 
     spark = (
