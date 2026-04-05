@@ -3,7 +3,7 @@ resources:
     financial_streaming_pipeline:
       name: financial-streaming-dlt
       catalog: ${var.catalog_name}
-      schema: ${var.schema_name}
+      target: ${var.schema_name}
       continuous: false # Set to true for always-on streaming
       serverless: true
       channel: "PREVIEW"
