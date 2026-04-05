@@ -8,7 +8,7 @@
 dbutils.library.restartPython()
 
 # COMMAND ----------
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from financial_transactions.config import ProjectConfig
 from financial_transactions.monitoring.alerting import AlertManager
@@ -20,18 +20,18 @@ config = ProjectConfig.from_yaml("../../project_config.yml", env="dev")
 
 # COMMAND ----------
 # Load reference and current data
-reference_end = datetime.now(tz=timezone.utc) - timedelta(days=1)
+reference_end = datetime.now(tz=UTC) - timedelta(days=1)
 reference_start = reference_end - timedelta(days=config.drift.reference_window_days)
 
 feature_table = f"{config.catalog_name}.{config.schema_name}.trade_features"
 
-reference_df = spark.table(feature_table).filter(
-    (spark.col("timestamp") >= reference_start) & (spark.col("timestamp") <= reference_end)
-).toPandas()
+reference_df = (
+    spark.table(feature_table)
+    .filter((spark.col("timestamp") >= reference_start) & (spark.col("timestamp") <= reference_end))
+    .toPandas()
+)
 
-current_df = spark.table(feature_table).filter(
-    spark.col("timestamp") > reference_end
-).toPandas()
+current_df = spark.table(feature_table).filter(spark.col("timestamp") > reference_end).toPandas()
 
 print(f"Reference: {len(reference_df)} rows, Current: {len(current_df)} rows")
 
@@ -39,7 +39,8 @@ print(f"Reference: {len(reference_df)} rows, Current: {len(current_df)} rows")
 # Detect drift
 detector = DriftDetector(config.drift, spark)
 drift_report = detector.detect_data_drift(
-    reference_df, current_df,
+    reference_df,
+    current_df,
     numerical_features=config.num_features,
     categorical_features=config.cat_features,
 )

@@ -7,7 +7,7 @@ for detecting data drift, prediction drift, and concept drift.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -70,9 +70,7 @@ class DriftDetector:
         return float(psi)
 
     @staticmethod
-    def compute_js_divergence(
-        reference: pd.Series, current: pd.Series
-    ) -> float:
+    def compute_js_divergence(reference: pd.Series, current: pd.Series) -> float:
         """Compute Jensen-Shannon divergence for categorical distributions.
 
         :param reference: Reference categorical distribution
@@ -118,7 +116,7 @@ class DriftDetector:
         """
         logger.info("Running data drift detection...")
         drift_report: dict[str, Any] = {
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            "timestamp": datetime.now(tz=UTC).isoformat(),
             "reference_size": len(reference_df),
             "current_size": len(current_df),
             "feature_drift": {},
@@ -168,9 +166,7 @@ class DriftDetector:
 
         return drift_report
 
-    def detect_prediction_drift(
-        self, reference_preds: np.ndarray, current_preds: np.ndarray
-    ) -> dict[str, Any]:
+    def detect_prediction_drift(self, reference_preds: np.ndarray, current_preds: np.ndarray) -> dict[str, Any]:
         """Detect prediction distribution drift.
 
         :param reference_preds: Reference period predictions
@@ -214,9 +210,7 @@ class DriftDetector:
         logger.info("No retraining needed")
         return False
 
-    def write_drift_metrics(
-        self, drift_report: dict[str, Any], table_name: str | None = None
-    ) -> None:
+    def write_drift_metrics(self, drift_report: dict[str, Any], table_name: str | None = None) -> None:
         """Write drift metrics to a Delta monitoring table.
 
         :param drift_report: Drift report to persist

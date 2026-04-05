@@ -8,7 +8,7 @@ for model training backfill.
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -93,17 +93,19 @@ class AlphaVantageCollector:
             time_series = data[time_series_key]
             records = []
             for timestamp_str, values in time_series.items():
-                records.append({
-                    "symbol": symbol,
-                    "timestamp": timestamp_str,
-                    "open": float(values["1. open"]),
-                    "high": float(values["2. high"]),
-                    "low": float(values["3. low"]),
-                    "close": float(values["4. close"]),
-                    "volume": int(values["5. volume"]),
-                    "interval": self.interval,
-                    "fetch_timestamp": datetime.now(tz=timezone.utc).isoformat(),
-                })
+                records.append(
+                    {
+                        "symbol": symbol,
+                        "timestamp": timestamp_str,
+                        "open": float(values["1. open"]),
+                        "high": float(values["2. high"]),
+                        "low": float(values["3. low"]),
+                        "close": float(values["4. close"]),
+                        "volume": int(values["5. volume"]),
+                        "interval": self.interval,
+                        "fetch_timestamp": datetime.now(tz=UTC).isoformat(),
+                    }
+                )
 
             df = pd.DataFrame(records)
             df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -163,7 +165,7 @@ class AlphaVantageCollector:
                 logger.info(f"Saved {len(df)} records to {self.output_path}")
         else:
             # Local mode: save as parquet
-            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
             local_path = f"{self.output_path}/historical_{timestamp}.parquet"
             df.to_parquet(local_path, index=False)
             logger.info(f"Saved {len(df)} records to {local_path}")

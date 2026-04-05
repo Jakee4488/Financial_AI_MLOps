@@ -52,20 +52,21 @@ class StreamProcessor:
             TimestampType,
         )
 
-        schema = StructType([
-            StructField("trade_id", StringType(), False),
-            StructField("symbol", StringType(), False),
-            StructField("price", DoubleType(), False),
-            StructField("volume", DoubleType(), True),
-            StructField("timestamp", TimestampType(), False),
-            StructField("exchange", StringType(), True),
-            StructField("ingestion_timestamp", TimestampType(), True),
-        ])
+        schema = StructType(
+            [
+                StructField("trade_id", StringType(), False),
+                StructField("symbol", StringType(), False),
+                StructField("price", DoubleType(), False),
+                StructField("volume", DoubleType(), True),
+                StructField("timestamp", TimestampType(), False),
+                StructField("exchange", StringType(), True),
+                StructField("ingestion_timestamp", TimestampType(), True),
+            ]
+        )
 
         logger.info(f"Reading stream from landing zone: {self.landing_zone}")
         return (
-            self.spark.readStream
-            .format("delta")
+            self.spark.readStream.format("delta")
             .schema(schema)
             .option("maxFilesPerTrigger", self.config.max_records_per_batch)
             .load(self.landing_zone)
@@ -95,23 +96,19 @@ class StreamProcessor:
             .withColumn("hour_of_day", F.hour(F.col("timestamp")))
             .withColumn("minute_of_hour", F.minute(F.col("timestamp")))
             .withColumn("day_of_week", F.dayofweek(F.col("timestamp")))
-            .withColumn("is_weekend", F.when(
-                F.dayofweek(F.col("timestamp")).isin(1, 7), True
-            ).otherwise(False))
+            .withColumn("is_weekend", F.when(F.dayofweek(F.col("timestamp")).isin(1, 7), True).otherwise(False))
             # Derive session type based on market hours (EST)
-            .withColumn("session_type", F.when(
-                (F.hour(F.col("timestamp")) >= 9) & (F.hour(F.col("timestamp")) < 16),
-                "regular"
-            ).when(
-                F.hour(F.col("timestamp")) < 9,
-                "pre_market"
-            ).otherwise("after_hours"))
+            .withColumn(
+                "session_type",
+                F.when((F.hour(F.col("timestamp")) >= 9) & (F.hour(F.col("timestamp")) < 16), "regular")
+                .when(F.hour(F.col("timestamp")) < 9, "pre_market")
+                .otherwise("after_hours"),
+            )
             # Derive trade type from volume
-            .withColumn("trade_type", F.when(
-                F.col("volume") >= 10000, "block"
-            ).when(
-                F.col("volume") >= 100, "standard"
-            ).otherwise("odd_lot"))
+            .withColumn(
+                "trade_type",
+                F.when(F.col("volume") >= 10000, "block").when(F.col("volume") >= 100, "standard").otherwise("odd_lot"),
+            )
             # Fill nulls
             .fillna({"volume": 0.0, "exchange": "US"})
             # Add processing timestamp
@@ -139,8 +136,7 @@ class StreamProcessor:
         checkpoint_path = f"{self.checkpoint_base}/bronze_to_silver"
 
         writer = (
-            silver_df.writeStream
-            .format("delta")
+            silver_df.writeStream.format("delta")
             .outputMode("append")
             .option("checkpointLocation", checkpoint_path)
             .trigger(processingTime=self.trigger_interval)

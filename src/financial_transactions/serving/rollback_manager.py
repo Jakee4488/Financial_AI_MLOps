@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from loguru import logger
@@ -31,7 +31,7 @@ class RollbackManager:
     def capture_state(self, model_version: str, endpoint_name: str) -> dict[str, Any]:
         """Capture current deployment state before changes."""
         snapshot = {
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            "timestamp": datetime.now(tz=UTC).isoformat(),
             "model_version": model_version,
             "endpoint_name": endpoint_name,
             "catalog": self.config.catalog_name,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import mlflow
-import pandas as pd
 from loguru import logger
 from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
@@ -47,13 +46,16 @@ class XGBoostModel(BaseAnomalyModel):
         self.pipeline = Pipeline(
             steps=[
                 ("preprocessor", preprocessor),
-                ("classifier", XGBClassifier(
-                    scale_pos_weight=scale,
-                    eval_metric=eval_metric,
-                    use_label_encoder=False,
-                    verbosity=0,
-                    **xgb_params,
-                )),
+                (
+                    "classifier",
+                    XGBClassifier(
+                        scale_pos_weight=scale,
+                        eval_metric=eval_metric,
+                        use_label_encoder=False,
+                        verbosity=0,
+                        **xgb_params,
+                    ),
+                ),
             ]
         )
 

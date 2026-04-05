@@ -45,10 +45,14 @@ validator = ModelValidator(min_pr_auc=0.5, min_f1=0.3)
 validation = validator.validate(result.challenger)
 
 if not validation.passed:
-    dbutils.notebook.exit(json.dumps({
-        "status": "VALIDATION_FAILED",
-        "details": validation.details,
-    }))
+    dbutils.notebook.exit(
+        json.dumps(
+            {
+                "status": "VALIDATION_FAILED",
+                "details": validation.details,
+            }
+        )
+    )
 
 # COMMAND ----------
 # Champion/Challenger comparison
@@ -77,9 +81,13 @@ else:
 
 # COMMAND ----------
 # Output summary
-dbutils.notebook.exit(json.dumps({
-    "status": comparison.decision,
-    "winner": result.challenger.model_type,
-    "metrics": result.challenger.metrics,
-    "comparison_table": result.comparison_table.to_dict(),
-}))
+dbutils.notebook.exit(
+    json.dumps(
+        {
+            "status": comparison.decision,
+            "winner": result.challenger.model_type,
+            "metrics": result.challenger.metrics,
+            "comparison_table": result.comparison_table.to_dict(),
+        }
+    )
+)

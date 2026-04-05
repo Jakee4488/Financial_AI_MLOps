@@ -6,7 +6,7 @@ performance metrics, and data volume, then dispatches retraining jobs.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from loguru import logger
@@ -101,7 +101,7 @@ class RetrainingTrigger:
             if last_run is None:
                 return True
 
-            elapsed = (datetime.now(tz=timezone.utc) - last_run).total_seconds() / 3600
+            elapsed = (datetime.now(tz=UTC) - last_run).total_seconds() / 3600
             return elapsed >= self.cooldown_hours
         except Exception:
             return True  # Allow if audit table doesn't exist
@@ -151,7 +151,7 @@ class RetrainingTrigger:
         from pyspark.sql import Row
 
         row = Row(
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
             event_type=event_type,
             details=json.dumps(details or {}),
         )

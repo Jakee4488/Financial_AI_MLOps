@@ -24,7 +24,7 @@ class CatToIntTransformer(BaseEstimator, TransformerMixin):
         self.cat_features = cat_features
         self.cat_maps_: dict[str, dict] = {}
 
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "CatToIntTransformer":
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> CatToIntTransformer:
         """Fit the transformer."""
         X = X.copy()
         for col in self.cat_features:

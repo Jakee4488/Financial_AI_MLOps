@@ -11,7 +11,7 @@ import json
 import threading
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -77,11 +77,9 @@ class FinnhubCollector:
                     "symbol": trade.get("s", ""),
                     "price": float(trade.get("p", 0.0)),
                     "volume": float(trade.get("v", 0.0)),
-                    "timestamp": datetime.fromtimestamp(
-                        trade.get("t", 0) / 1000, tz=timezone.utc
-                    ).isoformat(),
+                    "timestamp": datetime.fromtimestamp(trade.get("t", 0) / 1000, tz=UTC).isoformat(),
                     "exchange": self._parse_exchange(trade.get("s", "")),
-                    "ingestion_timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "ingestion_timestamp": datetime.now(tz=UTC).isoformat(),
                 }
                 records.append(record)
 
@@ -144,7 +142,7 @@ class FinnhubCollector:
                 spark_df.write.format("delta").mode("append").save(self.output_path)
             else:
                 # Write to local parquet for testing
-                timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
                 local_path = f"{self.output_path}/batch_{timestamp}.parquet"
                 df.to_parquet(local_path, index=False)
 

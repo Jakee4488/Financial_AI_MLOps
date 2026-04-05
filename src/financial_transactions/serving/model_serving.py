@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import mlflow
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
@@ -44,10 +42,7 @@ class AnomalyModelServing:
         scale_to_zero: bool = True,
     ) -> None:
         """Deploy or update the serving endpoint (full traffic)."""
-        endpoint_exists = any(
-            item.name == self.endpoint_name
-            for item in self.workspace.serving_endpoints.list()
-        )
+        endpoint_exists = any(item.name == self.endpoint_name for item in self.workspace.serving_endpoints.list())
         entity_version = self.get_latest_model_version() if version == "latest" else version
 
         served_entities = [
@@ -66,9 +61,7 @@ class AnomalyModelServing:
             )
             logger.info(f"Created endpoint {self.endpoint_name} with v{entity_version}")
         else:
-            self.workspace.serving_endpoints.update_config(
-                name=self.endpoint_name, served_entities=served_entities
-            )
+            self.workspace.serving_endpoints.update_config(name=self.endpoint_name, served_entities=served_entities)
             logger.info(f"Updated endpoint {self.endpoint_name} to v{entity_version}")
 
         self._production_version = entity_version

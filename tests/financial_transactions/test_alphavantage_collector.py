@@ -1,9 +1,9 @@
 """Tests for Alpha Vantage historical collector."""
 
-import pytest
-import requests
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
-from unittest.mock import patch, MagicMock
+import pytest
 
 from financial_transactions.config import HistoricalConfig
 from financial_transactions.streaming.alphavantage_collector import AlphaVantageCollector
@@ -20,9 +20,9 @@ def mock_av_response():
                 "2. high": "151.0",
                 "3. low": "149.0",
                 "4. close": "150.5",
-                "5. volume": "100"
+                "5. volume": "100",
             }
-        }
+        },
     }
 
 
@@ -33,12 +33,12 @@ def test_fetch_symbol_success(mock_get, mock_av_response) -> None:
     mock_resp.json.return_value = mock_av_response
     mock_resp.raise_for_status.return_value = None
     mock_get.return_value = mock_resp
-    
+
     config = HistoricalConfig(alphavantage_api_key="test", symbols=["AAPL"])
     collector = AlphaVantageCollector(config)
-    
+
     df = collector.fetch_symbol("AAPL")
-    
+
     assert not df.empty
     assert len(df) == 1
     assert df.iloc[0]["symbol"] == "AAPL"
@@ -52,10 +52,10 @@ def test_fetch_symbol_api_error(mock_get) -> None:
     mock_resp = MagicMock()
     mock_resp.json.return_value = {"Error Message": "Invalid API call"}
     mock_get.return_value = mock_resp
-    
+
     config = HistoricalConfig(alphavantage_api_key="test", symbols=["AAPL"])
     collector = AlphaVantageCollector(config)
-    
+
     df = collector.fetch_symbol("AAPL")
     assert df.empty
 
@@ -65,12 +65,12 @@ def test_fetch_symbol_api_error(mock_get) -> None:
 def test_fetch_all_symbols_rate_limiting(mock_fetch, mock_sleep) -> None:
     """Test rate limiting sleep is called between symbols."""
     mock_fetch.return_value = pd.DataFrame([{"symbol": "TEST"}])
-    
+
     config = HistoricalConfig(symbols=["AAPL", "MSFT", "GOOGL"], rate_limit_sleep=5)
     collector = AlphaVantageCollector(config)
-    
+
     collector.fetch_all_symbols()
-    
+
     assert mock_fetch.call_count == 3
     assert mock_sleep.call_count == 2  # Sleep between the 3 calls, not after last
     mock_sleep.assert_called_with(5)
