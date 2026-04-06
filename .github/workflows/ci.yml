@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-
 env:
   PYTHON_VERSION: "3.11"
   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
