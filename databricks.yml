@@ -1,6 +1,10 @@
 bundle:
   name: financial-ai-mlops
 
+permissions:
+  - level: CAN_MANAGE
+    group_name: users
+
 include:
   - resources/*
 

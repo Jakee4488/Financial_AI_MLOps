@@ -2,6 +2,7 @@ resources:
   pipelines:
     financial_streaming_pipeline:
       name: financial-streaming-dlt
+      allow_duplicate_names: true
       catalog: ${var.catalog_name}
       target: ${var.schema_name}
       continuous: false # Set to true for always-on streaming
