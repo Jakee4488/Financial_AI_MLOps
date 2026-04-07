@@ -10,6 +10,8 @@ env:
   PYTHON_VERSION: "3.11"
   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
   DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -98,13 +100,18 @@ jobs:
       - name: Ensure Databricks secrets are present
         shell: bash
         run: |
-          if [[ -z "${DATABRICKS_HOST}" || -z "${DATABRICKS_TOKEN}" ]]; then
-            echo "Missing DATABRICKS_HOST / DATABRICKS_TOKEN. Configure repo/environment secrets."
+          if [[ -z "${DATABRICKS_HOST}" ]]; then
+            echo "Missing DATABRICKS_HOST secret."
             exit 1
+          fi
+          if [[ -z "${DATABRICKS_TOKEN}" && -z "${DATABRICKS_CLIENT_ID}" ]]; then
+             echo "Missing authentication secrets! You must provide either DATABRICKS_TOKEN (for PAT) or DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET (for OAuth M2M)."
+             exit 1
           fi
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
 
       - name: Install Databricks CLI
         run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
@@ -114,6 +121,8 @@ jobs:
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
 
   build:
     name: Build Package
