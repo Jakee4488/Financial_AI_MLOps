@@ -8,10 +8,6 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
-  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -90,6 +86,7 @@ jobs:
   bundle-validate:
     name: Validate Databricks Bundle
     runs-on: ubuntu-latest
+    environment: dev
     needs: lint-and-test
     if: >
       github.event_name != 'pull_request' ||
@@ -101,23 +98,24 @@ jobs:
         shell: bash
         run: |
           if [[ -z "${DATABRICKS_HOST}" ]]; then
-            echo "Missing DATABRICKS_HOST secret."
+            echo "::error::Missing DATABRICKS_HOST secret."
             exit 1
           fi
-          if [[ -z "${DATABRICKS_TOKEN}" && -z "${DATABRICKS_CLIENT_ID}" ]]; then
-             echo "Missing authentication secrets! You must provide either DATABRICKS_TOKEN (for PAT) or DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET (for OAuth M2M)."
+          if [[ -z "${DATABRICKS_TOKEN}" ]] && [[ -z "${DATABRICKS_CLIENT_ID}" || -z "${DATABRICKS_CLIENT_SECRET}" ]]; then
+             echo "::error::Missing authentication secrets! Provide either DATABRICKS_TOKEN (for PAT) OR both DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET (for OAuth)."
              exit 1
           fi
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
 
       - name: Install Databricks CLI
         run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
 
       - name: Validate bundle
-        run: databricks bundle validate
+        run: databricks bundle validate -t dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
