@@ -104,7 +104,7 @@ streaming:
   checkpoint_base: /Workspace/checkpoints/financial-anomaly
   max_records_per_batch: 1000
   watermark_delay: "2 minutes"
-  landing_zone_path: /mnt/streaming-landing/trades
+  landing_zone_path: dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades
 
 # Alpha Vantage historical configuration
 historical:

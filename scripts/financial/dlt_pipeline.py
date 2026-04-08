@@ -1,13 +1,18 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # Financial Streaming DLT Pipeline Entrypoint
-# MAGIC
-# MAGIC Defines Bronze, Silver, and Gold DLT tables in a single file so pipeline
-# MAGIC parsing always discovers table definitions.
+"""
+Financial Streaming DLT Pipeline Entrypoint
+
+Defines Bronze, Silver, and Gold DLT tables in a single file so pipeline
+parsing always discovers table definitions.
+"""
 
 import dlt
 from pyspark.sql import Window
 from pyspark.sql import functions as F
+
+STREAMING_SOURCE_PATH = spark.conf.get(
+    "financial.streaming_source_path",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
+)
 
 
 @dlt.table(
@@ -26,7 +31,7 @@ def bronze_trades():
         .option("cloudFiles.format", "json")
         .option("cloudFiles.inferColumnTypes", "true")
         .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-        .load("/mnt/streaming-landing/trades/")
+        .load(STREAMING_SOURCE_PATH)
         .withColumn("_ingested_at", F.current_timestamp())
         .withColumn("_source_file", F.input_file_name())
     )

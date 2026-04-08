@@ -14,3 +14,4 @@ resources:
           path: ../scripts/financial/dlt_pipeline.py
       configuration:
         "spark.databricks.delta.enableChangeDataFeed": "true"
+        "financial.streaming_source_path": "dbfs:/Volumes/${var.catalog_name}/${var.schema_name}/streaming_landing/trades"

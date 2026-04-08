@@ -18,7 +18,7 @@ class StreamingConfig(BaseModel):
     checkpoint_base: str = "/Workspace/checkpoints/financial-anomaly"
     max_records_per_batch: int = 1000
     watermark_delay: str = "2 minutes"
-    landing_zone_path: str = "/mnt/streaming-landing/trades"
+    landing_zone_path: str = "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades"
 
 
 class HistoricalConfig(BaseModel):
