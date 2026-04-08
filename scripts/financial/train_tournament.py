@@ -10,11 +10,17 @@ import glob
 import subprocess
 import sys
 
-WHEEL_GLOB = "/Volumes/*/financial_transactions/packages/financial_ai_mlops-*.whl"
-wheel_candidates = sorted(glob.glob(WHEEL_GLOB), reverse=True)
+WHEEL_GLOBS = [
+    "/dbfs/FileStore/financial_ai_mlops_*.whl",
+    "/Volumes/*/financial_transactions/packages/financial_ai_mlops-*.whl",
+]
+wheel_candidates = []
+for pattern in WHEEL_GLOBS:
+    wheel_candidates.extend(glob.glob(pattern))
+wheel_candidates = sorted(wheel_candidates, reverse=True)
 
 if not wheel_candidates:
-    raise FileNotFoundError(f"No wheel found for pattern: {WHEEL_GLOB}")
+    raise FileNotFoundError(f"No wheel found for patterns: {WHEEL_GLOBS}")
 
 subprocess.check_call(
     [

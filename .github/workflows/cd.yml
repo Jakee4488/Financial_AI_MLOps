@@ -51,8 +51,9 @@ jobs:
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
-          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
+          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
+          echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
       - name: Run dev smoke tests
         run: |
@@ -89,8 +90,9 @@ jobs:
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_acc/financial_transactions/packages/"
-          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_acc/financial_transactions/packages/"
+          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
+          echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
       - name: Run acceptance tests
         run: |
@@ -129,8 +131,9 @@ jobs:
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_prd/financial_transactions/packages/"
-          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_prd/financial_transactions/packages/"
+          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
+          echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
   rollback:
     name: Emergency Rollback
