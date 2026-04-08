@@ -11,7 +11,6 @@ import subprocess
 import sys
 
 WHEEL_GLOBS = [
-    "/dbfs/FileStore/financial_ai_mlops_*.whl",
     "/Volumes/*/financial_transactions/packages/financial_ai_mlops-*.whl",
 ]
 wheel_candidates = []

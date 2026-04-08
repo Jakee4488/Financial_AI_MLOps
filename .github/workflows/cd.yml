@@ -46,12 +46,20 @@ jobs:
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
 
-      - name: Upload wheel to Databricks Volume (dev)
+      - name: Upload wheel to Unity Catalog Volume (dev)
         shell: bash
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          TARGET_DIR="dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
+          TARGET_PATH="${TARGET_DIR}$(basename "$WHEEL_PATH")"
+
+          databricks fs mkdirs "$TARGET_DIR" || {
+            echo "::error::Could not access or create $TARGET_DIR. Ensure UC volume exists and deploy identity has USE CATALOG, USE SCHEMA, READ VOLUME, WRITE VOLUME."
+            databricks auth describe || true
+            exit 1
+          }
+
           databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
           echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
@@ -85,12 +93,20 @@ jobs:
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
 
-      - name: Upload wheel to Databricks Volume (acc)
+      - name: Upload wheel to Unity Catalog Volume (acc)
         shell: bash
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          TARGET_DIR="dbfs:/Volumes/mlops_acc/financial_transactions/packages/"
+          TARGET_PATH="${TARGET_DIR}$(basename "$WHEEL_PATH")"
+
+          databricks fs mkdirs "$TARGET_DIR" || {
+            echo "::error::Could not access or create $TARGET_DIR. Ensure UC volume exists and deploy identity has USE CATALOG, USE SCHEMA, READ VOLUME, WRITE VOLUME."
+            databricks auth describe || true
+            exit 1
+          }
+
           databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
           echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
@@ -126,12 +142,20 @@ jobs:
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
 
-      - name: Upload wheel to Databricks Volume (prd)
+      - name: Upload wheel to Unity Catalog Volume (prd)
         shell: bash
         run: |
           set -euo pipefail
           WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
-          TARGET_PATH="dbfs:/FileStore/financial_ai_mlops_${GITHUB_SHA}.whl"
+          TARGET_DIR="dbfs:/Volumes/mlops_prd/financial_transactions/packages/"
+          TARGET_PATH="${TARGET_DIR}$(basename "$WHEEL_PATH")"
+
+          databricks fs mkdirs "$TARGET_DIR" || {
+            echo "::error::Could not access or create $TARGET_DIR. Ensure UC volume exists and deploy identity has USE CATALOG, USE SCHEMA, READ VOLUME, WRITE VOLUME."
+            databricks auth describe || true
+            exit 1
+          }
+
           databricks fs cp --overwrite "$WHEEL_PATH" "$TARGET_PATH"
           echo "Uploaded $WHEEL_PATH to $TARGET_PATH"
 
