@@ -3,7 +3,28 @@
 # MAGIC # Deploy Anomaly Model — Canary Deployment
 
 # COMMAND ----------
-# MAGIC %pip install /Volumes/mlops_dev/financial_transactions/packages/financial_ai_mlops-latest-py3-none-any.whl --quiet
+import glob
+import subprocess
+import sys
+
+WHEEL_GLOB = "/Volumes/*/financial_transactions/packages/financial_ai_mlops-*.whl"
+wheel_candidates = sorted(glob.glob(WHEEL_GLOB), reverse=True)
+
+if not wheel_candidates:
+    raise FileNotFoundError(f"No wheel found for pattern: {WHEEL_GLOB}")
+
+subprocess.check_call(
+    [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--disable-pip-version-check",
+        "--quiet",
+        wheel_candidates[0],
+    ]
+)
+print(f"Installed wheel: {wheel_candidates[0]}")
 # COMMAND ----------
 dbutils.library.restartPython()
 

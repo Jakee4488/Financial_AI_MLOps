@@ -32,6 +32,9 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      - name: Build wheel artifact
+        run: uv build
+
       - name: Validate bundle
         run: databricks bundle validate -t dev
 
@@ -42,6 +45,14 @@ jobs:
             --var="branch=${{ github.ref_name }}" \
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+      - name: Upload wheel to Databricks Volume (dev)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
+          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
+          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
 
       - name: Run dev smoke tests
         run: |
@@ -62,6 +73,9 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      - name: Build wheel artifact
+        run: uv build
+
       - name: Deploy to acc
         run: |
           databricks bundle deploy -t acc \
@@ -69,6 +83,14 @@ jobs:
             --var="branch=${{ github.ref_name }}" \
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+      - name: Upload wheel to Databricks Volume (acc)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
+          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_acc/financial_transactions/packages/"
+          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_acc/financial_transactions/packages/"
 
       - name: Run acceptance tests
         run: |
@@ -91,6 +113,9 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      - name: Build wheel artifact
+        run: uv build
+
       - name: Deploy to production
         run: |
           databricks bundle deploy -t prd \
@@ -98,6 +123,14 @@ jobs:
             --var="branch=${{ github.ref_name }}" \
             --var="finnhub_api_key=${{ secrets.FINNHUB_API_KEY }}" \
             --var="alphavantage_api_key=${{ secrets.ALPHAVANTAGE_API_KEY }}"
+
+      - name: Upload wheel to Databricks Volume (prd)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)
+          databricks fs cp --overwrite "$WHEEL_PATH" "dbfs:/Volumes/mlops_prd/financial_transactions/packages/"
+          echo "Uploaded $WHEEL_PATH to dbfs:/Volumes/mlops_prd/financial_transactions/packages/"
 
   rollback:
     name: Emergency Rollback
