@@ -7,11 +7,17 @@ Usage:
 import argparse
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+if "__file__" in globals():
+    repo_root = Path(__file__).resolve().parents[2]
+else:
+    # Databricks job/notebook execution may not define __file__
+    repo_root = Path.cwd()
+sys.path.insert(0, str(repo_root))
 
 from financial_transactions.config import StreamingConfig
 from financial_transactions.streaming.finnhub_collector import FinnhubCollector
@@ -25,9 +31,10 @@ def main() -> None:
     parser.add_argument("--symbols", type=str, default="AAPL,MSFT,GOOGL", help="Comma-separated symbols")
     parser.add_argument("--output", type=str, default="./data/landing/trades", help="Output path")
     parser.add_argument("--batch-interval", type=int, default=30, help="Flush interval in seconds")
+    parser.add_argument("--api-key", type=str, default="", help="Finnhub API key (overrides env var)")
     args = parser.parse_args()
 
-    api_key = os.getenv("FINNHUB_API_KEY", "")
+    api_key = args.api_key or os.getenv("FINNHUB_API_KEY", "")
     if not api_key:
         logger.error("FINNHUB_API_KEY not set")
         sys.exit(1)
