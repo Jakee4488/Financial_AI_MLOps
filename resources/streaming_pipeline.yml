@@ -11,10 +11,6 @@ resources:
       edition: "ADVANCED"
       libraries:
         - notebook:
-            path: ../src/financial_transactions/dlt/bronze_ingest.py
-        - notebook:
-            path: ../src/financial_transactions/dlt/silver_transform.py
-        - notebook:
-            path: ../src/financial_transactions/dlt/gold_features.py
+          path: ../scripts/financial/dlt_pipeline.py
       configuration:
         "spark.databricks.delta.enableChangeDataFeed": "true"
