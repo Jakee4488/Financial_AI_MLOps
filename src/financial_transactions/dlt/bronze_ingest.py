@@ -7,10 +7,21 @@
 
 import dlt
 from pyspark.sql import functions as F
+from pyspark.sql.types import DoubleType, StringType, StructField, StructType, TimestampType
 
 STREAMING_SOURCE_PATH = spark.conf.get(
     "financial.streaming_source_path",
-    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing",
+)
+TRADE_SCHEMA = StructType(
+    [
+        StructField("trade_id", StringType(), True),
+        StructField("symbol", StringType(), True),
+        StructField("price", DoubleType(), True),
+        StructField("volume", DoubleType(), True),
+        StructField("timestamp", TimestampType(), True),
+        StructField("exchange", StringType(), True),
+    ]
 )
 
 
@@ -32,9 +43,8 @@ def bronze_trades():
     return (
         spark.readStream.format("cloudFiles")
         .option("cloudFiles.format", "json")
-        .option("cloudFiles.inferColumnTypes", "true")
-        .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+        .schema(TRADE_SCHEMA)
         .load(STREAMING_SOURCE_PATH)
         .withColumn("_ingested_at", F.current_timestamp())
-        .withColumn("_source_file", F.input_file_name())
+        .withColumn("_source_file", F.col("_metadata.file_path"))
     )

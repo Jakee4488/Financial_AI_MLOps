@@ -6,12 +6,23 @@ parsing always discovers table definitions.
 """
 
 import dlt
+from pyspark.sql.types import DoubleType, StringType, StructField, StructType, TimestampType
 from pyspark.sql import Window
 from pyspark.sql import functions as F
 
 STREAMING_SOURCE_PATH = spark.conf.get(
     "financial.streaming_source_path",
-    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing",
+)
+TRADE_SCHEMA = StructType(
+    [
+        StructField("trade_id", StringType(), True),
+        StructField("symbol", StringType(), True),
+        StructField("price", DoubleType(), True),
+        StructField("volume", DoubleType(), True),
+        StructField("timestamp", TimestampType(), True),
+        StructField("exchange", StringType(), True),
+    ]
 )
 
 
@@ -29,11 +40,10 @@ def bronze_trades():
     return (
         spark.readStream.format("cloudFiles")
         .option("cloudFiles.format", "json")
-        .option("cloudFiles.inferColumnTypes", "true")
-        .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+        .schema(TRADE_SCHEMA)
         .load(STREAMING_SOURCE_PATH)
         .withColumn("_ingested_at", F.current_timestamp())
-        .withColumn("_source_file", F.input_file_name())
+        .withColumn("_source_file", F.col("_metadata.file_path"))
     )
 
 
@@ -87,7 +97,7 @@ def silver_trades():
 )
 def gold_trade_features():
     """Compute Gold-layer features from Silver trade data."""
-    silver = dlt.read_stream("silver_trades")
+    silver = dlt.read("silver_trades")
 
     symbol_time_window = Window.partitionBy("symbol").orderBy("timestamp")
     symbol_rows_14 = Window.partitionBy("symbol").orderBy("timestamp").rowsBetween(-13, 0)

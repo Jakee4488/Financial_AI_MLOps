@@ -31,7 +31,7 @@ def gold_trade_features():
     - macd_signal: MACD line approximation
     - bollinger_position: position within Bollinger Bands
     """
-    silver = dlt.read_stream("silver_trades")
+    silver = dlt.read("silver_trades")
 
     # Define window specs
     symbol_time_window = Window.partitionBy("symbol").orderBy("timestamp")
