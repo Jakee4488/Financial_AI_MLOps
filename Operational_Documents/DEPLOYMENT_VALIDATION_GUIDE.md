@@ -12,7 +12,7 @@ Your Databricks workspace needs three Unity Catalogs (dev, acc, prd) with schema
 
 ### Quick Setup
 
-1. In Databricks SQL editor, open [setup_uc_infrastructure.sql](setup_uc_infrastructure.sql).
+1. In Databricks SQL editor, open [setup_uc_infrastructure.sql](../setup_uc_infrastructure.sql).
 2. Run the entire script.
 3. Verify output shows:
    - Three catalogs: mlops_dev, mlops_acc, mlops_prd

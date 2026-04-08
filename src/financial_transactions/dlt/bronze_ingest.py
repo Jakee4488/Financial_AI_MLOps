@@ -11,7 +11,7 @@ from pyspark.sql.types import DoubleType, StringType, StructField, StructType, T
 
 STREAMING_SOURCE_PATH = spark.conf.get(
     "financial.streaming_source_path",
-    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
 )
 TRADE_SCHEMA = StructType(
     [
@@ -37,7 +37,7 @@ TRADE_SCHEMA = StructType(
 def bronze_trades():
     """Ingest raw trade data using Auto Loader.
 
-    Reads JSON files from the streaming landing zone with schema inference.
+    Reads JSON files from the streaming landing zone with explicit schema.
     All raw fields are preserved for downstream processing.
     """
     return (

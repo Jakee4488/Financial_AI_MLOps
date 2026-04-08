@@ -12,7 +12,7 @@ from pyspark.sql import functions as F
 
 STREAMING_SOURCE_PATH = spark.conf.get(
     "financial.streaming_source_path",
-    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
 )
 TRADE_SCHEMA = StructType(
     [

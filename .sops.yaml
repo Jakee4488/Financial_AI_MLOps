@@ -1,0 +1,23 @@
+creation_rules:
+  # 1) Prefer AGE recipients for local/team encryption
+  # Replace with your real AGE public keys before use.
+  - path_regex: ^Operational_Documents/.*\.md$
+    age: >-
+      age1replace_with_real_recipient_key
+    encrypted_regex: '^(.*)$'
+
+  # 2) Example cloud-KMS alternatives (uncomment and fill as needed)
+  # AWS KMS
+  # - path_regex: ^Operational_Documents/.*\.md$
+  #   kms: arn:aws:kms:us-east-1:123456789012:key/replace-with-real-key-id
+  #   encrypted_regex: '^(.*)$'
+  #
+  # Azure Key Vault
+  # - path_regex: ^Operational_Documents/.*\.md$
+  #   azure_keyvault: https://<kv-name>.vault.azure.net/keys/<key-name>/<key-version>
+  #   encrypted_regex: '^(.*)$'
+  #
+  # GCP KMS
+  # - path_regex: ^Operational_Documents/.*\.md$
+  #   gcp_kms: projects/<project>/locations/<location>/keyRings/<ring>/cryptoKeys/<key>
+  #   encrypted_regex: '^(.*)$'
