@@ -29,6 +29,8 @@ subprocess.check_call(
         wheel_candidates[0],
     ]
 )
+
+
 print(f"Installed wheel: {wheel_candidates[0]}")
 # COMMAND ----------
 dbutils.library.restartPython()
