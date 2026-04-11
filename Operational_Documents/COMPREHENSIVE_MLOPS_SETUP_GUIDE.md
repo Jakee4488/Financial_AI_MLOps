@@ -4,7 +4,7 @@ This guide provides an end-to-end setup for:
 - initializing ingestion and Delta Live Tables (DLT) pipelines,
 - evaluating and selecting the best model,
 - deploying the champion model to streaming inference,
-- implementing automated nightly retraining (with drift-triggered retraining on top).
+- implementing automated weekly retraining.
 
 It is written for this repository's Databricks Asset Bundles (DAB) layout.
 
@@ -21,10 +21,9 @@ Target workflow:
 6. **Retrain weekly** (plus drift-triggered retraining if needed).
 
 Core bundle resources:
-- `resources/ingestion_workflow.yml`  -> `financial_api_ingestion_workflow`
 - `resources/streaming_pipeline.yml` -> `financial_streaming_pipeline`
 - `resources/retraining_workflow.yml` -> `financial_retraining_workflow`
-- `resources/drift_monitoring.yml`   -> `drift_monitoring_job`
+- `resources/drift_monitoring.yml` -> `drift_monitoring_job`
 
 ---
 
@@ -38,10 +37,6 @@ uv pip install -e ".[dev,test,streaming]"
 databricks auth login
 databricks bundle validate -t dev
 ```
-
-> **Branch protection is active.** Never push directly to `main`. Always work on a
-> `feature/*`, `fix/*`, `chore/*`, or `hotfix/*` branch and open a PR.
-> See `protect_main.yml` and `CICD_EXECUTION_GRAPH.md` for the full flow.
 
 ### 2.2 Unity Catalog infrastructure
 
@@ -170,8 +165,8 @@ Post-deploy validations:
 
 ## 7) Weekly Automated Retraining
 
-Current retraining schedule in `resources/retraining_workflow.yml` is **nightly**:
-- `0 0 0 * * ?` (midnight UTC, every day)
+Current retraining schedule in `resources/retraining_workflow.yml` is daily:
+- `0 0 0 * * ?`
 
 To run weekly (example: Monday 02:00 UTC), change to:
 

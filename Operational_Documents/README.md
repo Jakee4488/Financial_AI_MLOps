@@ -24,7 +24,6 @@ Centralised operational documentation for Financial AI MLOps.
 | Document | Purpose |
 |---|---|
 | [`RUNBOOK.md`](RUNBOOK.md) | On-call incident response procedures |
-| [`CICD_EXECUTION_GRAPH.md`](CICD_EXECUTION_GRAPH.md) | Full CI/CD + Databricks execution flow diagram with timing |
 
 ### Security
 

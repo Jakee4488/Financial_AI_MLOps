@@ -36,9 +36,8 @@ graph TD
 - **Compute & Orchestration:** Databricks Asset Bundles (DABs), Delta Live Tables (DLT), Databricks Workflows.
 - **Machine Learning:** MLflow (Tracking & Registry), Scikit-Learn, LightGBM, XGBoost.
 - **Data Engineering:** PySpark, Delta Lake.
-- **Monitoring & Data Drift:** Custom PSI (Population Stability Index) + Jensen-Shannon Divergence (no external dependency).
-- **Streaming Inputs:** Finnhub WebSocket (real-time trades), Alpha Vantage REST (historical context).
-- **Branch Protection:** `protect_main.yml` enforces PR-only flow with naming convention + description checks.
+- **Monitoring & Data Drift:** Evidently AI.
+- **Streaming Inputs:** Finnhub Websocket (real-time trades), Alpha Vantage REST (historical context).
 
 ---
 
@@ -50,41 +49,23 @@ graph TD
 ├── project_config.yml       # Centralized hyperparameters, feature lists, and thresholds
 ├── databricks.yml           # Databricks Asset Bundles (DABs) configurations
 ├── pyproject.toml           # Python dependencies (uv/pip) and build system
-├── Operational_Documents/   # Runbooks, guides, reference docs (this folder)
-│   ├── README.md
-│   ├── RUNBOOK.md
-│   ├── CICD_EXECUTION_GRAPH.md
-│   ├── PROJECT_STRUCTURE.md
-│   └── FUNCTION_AND_CONFIG_REFERENCE.md
 ├── resources/               # YAML definitions for Databricks infrastructure
-│   ├── ingestion_workflow.yml  # Finnhub + DLT ingestion job
-│   ├── drift_monitoring.yml    # Scheduled drift detection job
+│   ├── drift_monitoring.yml # Scheduled drift detection job
 │   ├── retraining_workflow.yml # Retraining & multi-model tournament pipeline
 │   └── streaming_pipeline.yml  # DLT pipeline definition
-├── .github/workflows/
-│   ├── ci.yml               # Lint, test, bundle validate, build
-│   ├── cd.yml               # Deploy dev → acc → prd
-│   ├── protect_main.yml     # Branch protection, PR naming, draft check
-│   └── model_validation.yml # Manual model validation gate
-├── scripts/                 # Entry-point scripts / Notebook tasks run by Databricks Jobs
+├── scripts/                 # Entry level scripts / Notebook tasks run by Databricks Jobs
 │   └── financial/
 │       ├── collect_finnhub_stream.py
-│       ├── collect_alphavantage_history.py
-│       ├── dlt_pipeline.py
 │       ├── train_tournament.py
 │       ├── deploy_anomaly_model.py
 │       ├── detect_drift.py
-│       ├── export_dashboard_metrics.py
 │       └── rollback_model.py
 └── src/                     # Core business logic module (financial_transactions)
     └── financial_transactions/
-        ├── config.py        # All Pydantic config models
-        ├── dlt/             # Bronze, Silver, Gold DLT helpers
-        ├── features/        # Feature engineering + Feature Store manager
-        ├── models/          # Model tournament, champion/challenger, base model
-        ├── monitoring/      # PSI/JS drift detector, performance monitor, alerting
-        ├── serving/         # Model serving, A/B testing, rollback manager
-        └── streaming/       # Finnhub + AlphaVantage collectors, stream processor
+        ├── dlt/             # Bronze, Silver, Gold transformations
+        ├── features/        # Feature engineering logic
+        ├── models/          # Model topologies and wrappers
+        └── monitoring/      # Evidently drift and data quality checks
 ```
 
 ---
@@ -163,16 +144,13 @@ Models are evaluated against a holdout dataset. The system employs a rigorous ga
 
 ## 6. Data Drift & Monitoring
 
-Data drift monitoring is orchestrated by `resources/drift_monitoring.yml`.
+Data drift monitoring is handled by Evidently AI and orchestrated by `resources/drift_monitoring.yml`.
 
 - **Job**: `financial-drift-monitoring`
 - **Schedule**: Every 30 minutes (`0 */30 * * * ?`).
-- **Mechanism**: `detect_drift.py` loads a reference window (last 30 days) and a current window (since yesterday) from `gold_trade_features`.
-- **Metrics Evaluated**:
-  - **PSI** (Population Stability Index) on numerical features — threshold `0.2`
-  - **Jensen-Shannon Divergence** on categorical features — threshold `0.1`
-- **Retraining Trigger**: If any feature drifts, OR model PR-AUC drops >5%, OR sufficient new records — `RetrainingTrigger` fires (subject to cooldown ≥6h and daily limit ≤4).
-- **Alerting**: `AlertManager` sends webhook notification (Slack/Teams) and writes audit row to `drift_monitoring` Delta table.
+- **Mechanism**: The `detect_drift.py` script compares a recent data window against a historical reference window.
+- **Metrics Evaluated**: Population Stability Index (PSI) and Jensen-Shannon (JS) Divergence on key features like price volatility and trade intensity.
+- **Alerting**: If drift exceeds the threshold defined in `project_config.yml`, an alert is generated, and the retraining pipeline may be triggered automatically.
 
 ---
 
@@ -204,19 +182,6 @@ Data drift monitoring is orchestrated by `resources/drift_monitoring.yml`.
 
 ### Scenario D: Missing Dashboard Metrics
 - **Symptom**: The frontend dashboard is blank or shows stale data.
-- **Investigation**:
+- **Investigation**: 
   1. Verify the `export_dashboard_metrics.py` task is completing successfully.
   2. Ensure the Databricks Model Serving endpoint (if active) is accessible and not in a scaled-to-zero / cold-start state.
-
-### Scenario E: Direct Push to Main — Branch Protection Triggered
-- **Symptom**: `protect_main.yml` fires and the `block-direct-push` job fails. The commit is already on `main`.
-- **Investigation**: Check who pushed and the commit SHA from the GitHub Actions log.
-- **Resolution**:
-  1. Revert the commit: `git revert <sha> && git push origin main`
-  2. Apply the change correctly via a PR from a `feature/*` or `fix/*` branch.
-  3. Ensure GitHub Branch Protection Rules are enabled under `Settings → Branches` to prevent recurrence.
-
-### Scenario F: CI Skipped Unexpectedly
-- **Symptom**: A push to `main` or `develop` did not trigger `ci.yml`.
-- **Investigation**: Check if the commit only touched `Operational_Documents/**` or `README.md` — these paths are excluded via `paths-ignore` in `ci.yml` by design.
-- **Resolution**: If CI should have run, ensure the commit includes at least one file outside the ignored paths.
