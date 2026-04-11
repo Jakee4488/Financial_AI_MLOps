@@ -98,7 +98,8 @@ jobs:
           #   chore/*         (maintenance, deps, docs)
           #   refactor/*      (code improvements)
           #   release/*       (release candidates)
-          if echo "$BRANCH" | grep -qE '^(feature|fix|hotfix|chore|refactor|release)/.+'; then
+          #   dev/*           (experimental / dev environment branches)
+          if echo "$BRANCH" | grep -qE '^(feature|fix|hotfix|chore|refactor|release|dev)/.+'; then
             echo "✅ Branch name '$BRANCH' follows naming convention"
           else
             echo "=========================================="
@@ -112,18 +113,20 @@ jobs:
             echo "  chore/<description>     — maintenance tasks"
             echo "  refactor/<description>  — code improvements"
             echo "  release/<version>       — release candidates"
+            echo "  dev/<description>       — experimental / dev branches"
             echo ""
             echo "Examples:"
             echo "  feature/add-xgboost-model"
             echo "  fix/drift-psi-threshold"
             echo "  chore/update-dependencies"
+            echo "  dev/spike-new-feature"
             echo "=========================================="
             exit 1
           fi
 
-  # ──────────────────────────────────────────────────────────────------
+  # ──────────────────────────────────────────────────────────────
   # JOB 4: Verify PR has a meaningful description
-  # ──────────────────────────────────────────────────────────────-------
+  # ──────────────────────────────────────────────────────────────
   pr-description-check:
     name: PR Description Required
     runs-on: ubuntu-latest
