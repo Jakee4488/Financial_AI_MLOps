@@ -23,10 +23,47 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # ──────────────────────────────────────────────────────────────
+  # GUARD: Only deploy if push came from a PR merge, not a direct push
+  # ──────────────────────────────────────────────────────────────
+  verify-merge:
+    name: Verify PR Merge (Block Direct Push Deployments)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check commit is a PR merge
+        run: |
+          # workflow_dispatch always passes — manual deploys are intentional
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "✅ Manual workflow_dispatch — skipping merge check"
+            exit 0
+          fi
+
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          echo "Commit message: $COMMIT_MSG"
+
+          # GitHub sets merge commit messages to "Merge pull request #N from ..."
+          if echo "$COMMIT_MSG" | grep -qE '^Merge pull request #[0-9]+'; then
+            echo "✅ Commit is a PR merge — deployment allowed"
+          else
+            echo "=============================================="
+            echo "🚫 DEPLOYMENT BLOCKED — Direct Push Detected"
+            echo "=============================================="
+            echo ""
+            echo "  Pushed by : ${{ github.actor }}"
+            echo "  Commit SHA: ${{ github.sha }}"
+            echo "  Message   : $COMMIT_MSG"
+            echo ""
+            echo "CD only runs on PR merges, not direct pushes."
+            echo "Please open a Pull Request and merge via GitHub UI."
+            echo "=============================================="
+            exit 1
+          fi
+
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
     environment: dev
+    needs: [verify-merge]
     steps:
       - uses: actions/checkout@v4
 
