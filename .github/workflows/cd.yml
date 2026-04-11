@@ -3,6 +3,10 @@ name: CD Pipeline
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'Operational_Documents/**'
+      - '**/README.md'
+      - 'README.md'
   workflow_dispatch:
     inputs:
       target:
