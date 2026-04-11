@@ -121,9 +121,9 @@ jobs:
             exit 1
           fi
 
-  # ──────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────------
   # JOB 4: Verify PR has a meaningful description
-  # ──────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────-------
   pr-description-check:
     name: PR Description Required
     runs-on: ubuntu-latest
@@ -148,3 +148,5 @@ jobs:
           else
             echo "✅ PR description looks good ($BODY_LENGTH chars)"
           fi
+
+
