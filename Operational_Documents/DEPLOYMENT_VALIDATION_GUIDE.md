@@ -34,15 +34,23 @@ Before running the pipelines, ensure your GitHub repository has the required Env
    - `DATABRICKS_TOKEN` (Or OAuth alternatives: `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`)
    - `FINNHUB_API_KEY`
    - `ALPHAVANTAGE_API_KEY`
+4. **Branch Protection:** Confirm `protect_main.yml` is active and branch protection rules are set in:
+   `Settings → Branches → Add ruleset → Require pull request + require status checks`.
+   See `CICD_EXECUTION_GRAPH.md` for the full enforcement flow.
 
 ---
 
 ## Step 2: Validate Continuous Integration (CI) Pipeline
 **Workflow Source:** `.github/workflows/ci.yml`
 
-The CI pipeline runs on Push (to `main` or `develop`) and Pull Request logic. To test it:
+The CI pipeline runs on push to `main` or `develop`, and on Pull Requests to `main`.
 
-1. **Trigger:** Create a feature branch off of `develop` or `main`. Make a non-breaking code change (e.g., adding a comment), commit, and push. Open a Pull Request targeting `main`.
+> **Note:** Changes only to `Operational_Documents/**` or `README.md` are **ignored** by CI
+> via `paths-ignore` filters added to the workflow. Code changes always trigger CI.
+
+To test it:
+
+1. **Trigger:** Create a **feature branch** (e.g. `feature/my-change`) — direct pushes to `main` are blocked by `protect_main.yml`. Push the branch, then open a Pull Request targeting `main`.
 2. **Monitor Actions:** Navigate to the **Actions** tab in GitHub and click on the "CI Pipeline" run.
 3. **Verify Jobs:**
    - **Lint & Test:** Ensure `ruff` format checks pass and unit tests execute successfully (`pytest`). Verify `test-results.xml` and `coverage.xml` artifacts upload successfully.
@@ -71,6 +79,12 @@ The CD pipeline triggers on pushes to the `main` branch or manually via `workflo
 
 ## Step 4: Validate Manual Model Validation Gate
 **Workflow Source:** `.github/workflows/model_validation.yml`
+
+> **All active workflows:**
+> - `ci.yml` — Lint, test, bundle validate, build
+> - `cd.yml` — Deploy dev → acc → prd
+> - `protect_main.yml` — Branch protection, PR naming, draft check
+> - `model_validation.yml` — Manual model validation gate
 
 1. **Trigger:** Go to Actions, select "Model Validation Gate", and run it via `workflow_dispatch`.
 2. Provide a dummy `model_version` (e.g., `v1.2.0`).
@@ -121,7 +135,11 @@ databricks bundle deploy -t dev \
    --var="finnhub_api_key=<key>" \
    --var="alphavantage_api_key=<key>"
 
-databricks fs cp --overwrite dist/<wheel-name>.whl dbfs:/FileStore/financial_ai_mlops_<sha>.whl
+# Upload wheel to Unity Catalog Volume (not DBFS FileStore)
+WHEEL=$(ls -t dist/*.whl | head -n 1)
+databricks fs mkdirs "dbfs:/Volumes/mlops_dev/financial_transactions/packages/"
+databricks fs cp --overwrite "$WHEEL" "dbfs:/Volumes/mlops_dev/financial_transactions/packages/$(basename $WHEEL)"
+
 databricks bundle run financial_retraining_workflow -t dev
 ```
 
