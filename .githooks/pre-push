@@ -1,0 +1,37 @@
+#!/bin/sh
+# ══════════════════════════════════════════════════════════════
+# pre-push hook — blocks any push directly to the remote 'main'
+#
+# Installed via:  git config core.hooksPath .githooks
+# ══════════════════════════════════════════════════════════════
+
+REMOTE="$1"
+URL="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -qE '^refs/heads/main$'; then
+    echo ""
+    echo "══════════════════════════════════════════════════════"
+    echo "  🚫  PUSH BLOCKED — Target branch is 'main'"
+    echo "══════════════════════════════════════════════════════"
+    echo ""
+    echo "  Pushing directly to 'main' is not allowed."
+    echo "  All changes must come through a Pull Request."
+    echo ""
+    echo "  To fix this:"
+    echo ""
+    echo "    1. Push your branch instead:"
+    echo "         git push origin HEAD:feature/your-change"
+    echo ""
+    echo "    2. Open a Pull Request on GitHub targeting 'main'"
+    echo ""
+    echo "    3. Get approval + pass all CI checks"
+    echo ""
+    echo "    4. Merge via GitHub UI (Squash & Merge preferred)"
+    echo ""
+    echo "══════════════════════════════════════════════════════"
+    exit 1
+  fi
+done
+
+exit 0
