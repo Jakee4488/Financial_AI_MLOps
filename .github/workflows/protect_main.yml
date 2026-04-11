@@ -1,0 +1,150 @@
+name: Protect Main Branch
+
+# Runs on every push to main.
+# This workflow acts as a *required status check* — when combined with
+# Branch Protection Rules in GitHub Settings, it ensures:
+#   ✅ All PRs must pass CI before merging
+#   ✅ At least 1 approving review is required
+#   ✅ Direct pushes to main are blocked by GitHub (not this workflow)
+#   ✅ This workflow itself must pass as a required check on every PR
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # JOB 1: Block any direct push that bypassed branch protection
+  # ──────────────────────────────────────────────────────────────
+  block-direct-push:
+    name: Block Direct Push to Main
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Detect direct push
+        run: |
+          echo "=========================================================="
+          echo "🚨 DIRECT PUSH TO MAIN DETECTED"
+          echo "=========================================================="
+          echo ""
+          echo "  Pushed by : ${{ github.actor }}"
+          echo "  Commit SHA: ${{ github.sha }}"
+          echo "  Ref       : ${{ github.ref }}"
+          echo ""
+          echo "Direct pushes to 'main' are not allowed."
+          echo "Please follow the contribution workflow:"
+          echo ""
+          echo "  1. Create a feature branch:"
+          echo "       git checkout -b feature/your-change"
+          echo ""
+          echo "  2. Push your branch:"
+          echo "       git push origin feature/your-change"
+          echo ""
+          echo "  3. Open a Pull Request to 'main' on GitHub"
+          echo ""
+          echo "  4. Get at least 1 approval + pass all required checks"
+          echo ""
+          echo "  5. Merge via GitHub UI (Squash & Merge preferred)"
+          echo ""
+          echo "If you are an admin performing an emergency hotfix, use:"
+          echo "  GitHub Settings → Branches → Allow force push (temporarily)"
+          echo "  Remember to disable it after the hotfix."
+          echo "=========================================================="
+          exit 1
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 2: Validate PR is not a draft before running checks
+  # ──────────────────────────────────────────────────────────────
+  pr-ready-check:
+    name: PR Readiness Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Fail if draft PR
+        if: github.event.pull_request.draft == true
+        run: |
+          echo "🚫 This PR is still a draft."
+          echo "Mark it as 'Ready for Review' before merging into main."
+          exit 1
+
+      - name: Confirm PR targets main
+        run: |
+          echo "✅ PR #${{ github.event.pull_request.number }} is ready for review"
+          echo "   Title : ${{ github.event.pull_request.title }}"
+          echo "   Author: ${{ github.actor }}"
+          echo "   Base  : ${{ github.event.pull_request.base.ref }}"
+          echo "   Head  : ${{ github.event.pull_request.head.ref }}"
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 3: Enforce branch naming convention on PR
+  # ──────────────────────────────────────────────────────────────
+  branch-name-check:
+    name: Enforce Branch Naming Convention
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check branch name
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          echo "Branch name: $BRANCH"
+
+          # Allowed patterns:
+          #   feature/*       (new features)
+          #   fix/*           (bug fixes)
+          #   hotfix/*        (emergency production fixes)
+          #   chore/*         (maintenance, deps, docs)
+          #   refactor/*      (code improvements)
+          #   release/*       (release candidates)
+          if echo "$BRANCH" | grep -qE '^(feature|fix|hotfix|chore|refactor|release)/.+'; then
+            echo "✅ Branch name '$BRANCH' follows naming convention"
+          else
+            echo "=========================================="
+            echo "❌ Invalid branch name: '$BRANCH'"
+            echo "=========================================="
+            echo ""
+            echo "Branch names must follow the pattern:"
+            echo "  feature/<description>   — new functionality"
+            echo "  fix/<description>       — bug fixes"
+            echo "  hotfix/<description>    — emergency production fixes"
+            echo "  chore/<description>     — maintenance tasks"
+            echo "  refactor/<description>  — code improvements"
+            echo "  release/<version>       — release candidates"
+            echo ""
+            echo "Examples:"
+            echo "  feature/add-xgboost-model"
+            echo "  fix/drift-psi-threshold"
+            echo "  chore/update-dependencies"
+            echo "=========================================="
+            exit 1
+          fi
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 4: Verify PR has a meaningful description
+  # ──────────────────────────────────────────────────────────────
+  pr-description-check:
+    name: PR Description Required
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check PR body length
+        run: |
+          BODY_LENGTH=$(echo "${{ github.event.pull_request.body }}" | wc -c)
+          echo "PR description length: $BODY_LENGTH characters"
+
+          if [ "$BODY_LENGTH" -lt 30 ]; then
+            echo "=========================================="
+            echo "❌ PR description is too short ($BODY_LENGTH chars)"
+            echo "=========================================="
+            echo ""
+            echo "Please add a meaningful PR description that includes:"
+            echo "  - What changed and why"
+            echo "  - How to test the changes"
+            echo "  - Any breaking changes or deployment notes"
+            echo "=========================================="
+            exit 1
+          else
+            echo "✅ PR description looks good ($BODY_LENGTH chars)"
+          fi
