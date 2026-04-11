@@ -38,6 +38,9 @@ Latest verified local result in this workspace (2026-04-08):
 - Runtime about 51s
 - Coverage about 46%
 
+> **Branch protection is active.** Do not push directly to `main`. Create a `feature/*` or
+> `fix/*` branch, push it, and open a Pull Request. See `protect_main.yml` for enforced checks.
+
 ## 2. What Current Tests Cover
 
 Automated tests currently validate:
@@ -80,9 +83,11 @@ Pass condition:
 ### 3.3 Execute pipeline resources
 
 ```bash
-databricks bundle run -t dev financial_streaming_pipeline
-databricks bundle run -t dev financial_retraining_workflow
-databricks bundle run -t dev drift_monitoring_job
+# Run pipelines in dependency order:
+databricks bundle run -t dev financial_api_ingestion_workflow  # Step 1: ingest data
+databricks bundle run -t dev financial_streaming_pipeline      # Step 2: DLT Bronze→Gold
+databricks bundle run -t dev financial_retraining_workflow     # Step 3: train + deploy model
+databricks bundle run -t dev drift_monitoring_job              # Step 4: drift check
 ```
 
 Pass conditions:
@@ -288,13 +293,21 @@ Treat a candidate as ready only when all are true:
 - bundle validate and deploy are green in target env,
 - streaming, retraining, and drift runs are green,
 - rollback process has been validated,
-- no blocking monitoring alerts remain.
+- no blocking monitoring alerts remain,
+- PR was reviewed and merged (not pushed directly to main),
+- `protect_main.yml` branch-name and description checks passed.
 
 ## 6. Useful Paths
 
 - `databricks.yml`
 - `project_config.yml`
+- `resources/ingestion_workflow.yml`
 - `resources/streaming_pipeline.yml`
 - `resources/retraining_workflow.yml`
 - `resources/drift_monitoring.yml`
+- `.github/workflows/ci.yml`
+- `.github/workflows/cd.yml`
+- `.github/workflows/protect_main.yml`
 - `tests/financial_transactions/`
+- `Operational_Documents/CICD_EXECUTION_GRAPH.md`
+- `Operational_Documents/FUNCTION_AND_CONFIG_REFERENCE.md`
