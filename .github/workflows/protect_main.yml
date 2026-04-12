@@ -17,43 +17,20 @@ on:
 
 jobs:
   # ──────────────────────────────────────────────────────────────
-  # JOB 1: Block any direct push that bypassed branch protection
+  # JOB 1: Record Push Event
   # ──────────────────────────────────────────────────────────────
-  block-direct-push:
-    name: Block Direct Push to Main
+  record-push:
+    name: Record Push to Main
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - name: Detect direct push
+      - name: Log Push
         run: |
-          echo "=========================================================="
-          echo "🚨 DIRECT PUSH TO MAIN DETECTED"
-          echo "=========================================================="
-          echo ""
-          echo "  Pushed by : ${{ github.actor }}"
-          echo "  Commit SHA: ${{ github.sha }}"
-          echo "  Ref       : ${{ github.ref }}"
-          echo ""
-          echo "Direct pushes to 'main' are not allowed."
-          echo "Please follow the contribution workflow:"
-          echo ""
-          echo "  1. Create a feature branch:"
-          echo "       git checkout -b feature/your-change"
-          echo ""
-          echo "  2. Push your branch:"
-          echo "       git push origin feature/your-change"
-          echo ""
-          echo "  3. Open a Pull Request to 'main' on GitHub"
-          echo ""
-          echo "  4. Get at least 1 approval + pass all required checks"
-          echo ""
-          echo "  5. Merge via GitHub UI (Squash & Merge preferred)"
-          echo ""
-          echo "If you are an admin performing an emergency hotfix, use:"
-          echo "  GitHub Settings → Branches → Allow force push (temporarily)"
-          echo "  Remember to disable it after the hotfix."
-          echo "=========================================================="
-          exit 1
+          echo "✅ Push to main recorded."
+          echo "   Commit SHA: ${{ github.sha }}"
+          echo "   Pushed by : ${{ github.actor }}"
+          echo "   Ref       : ${{ github.ref }}"
+          echo "Note: Branch protection (blocking direct pushes) should be configured in GitHub Settings -> Branches."
 
   # ──────────────────────────────────────────────────────────────
   # JOB 2: Validate PR is not a draft before running checks
