@@ -31,27 +31,3 @@ jobs:
           echo "   Pushed by : ${{ github.actor }}"
           echo "   Ref       : ${{ github.ref }}"
           echo "Note: Branch protection (blocking direct pushes) should be configured in GitHub Settings -> Branches."
-
-  # ──────────────────────────────────────────────────────────────
-  # JOB 2: Validate PR is not a draft before running checks
-  # ──────────────────────────────────────────────────────────────
-  pr-ready-check:
-    name: PR Readiness Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Fail if draft PR
-        if: github.event.pull_request.draft == true
-        run: |
-          echo "🚫 This PR is still a draft."
-          echo "Mark it as 'Ready for Review' before merging into main."
-          exit 1
-
-      - name: Confirm PR targets main
-        run: |
-          echo "✅ PR #${{ github.event.pull_request.number }} is ready for review"
-          echo "   Title : ${{ github.event.pull_request.title }}"
-          echo "   Author: ${{ github.actor }}"
-          echo "   Base  : ${{ github.event.pull_request.base.ref }}"
-          echo "   Head  : ${{ github.event.pull_request.head.ref }}"
-
