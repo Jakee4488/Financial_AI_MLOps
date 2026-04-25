@@ -17,7 +17,7 @@ if "__file__" in globals():
 else:
     # Databricks job/notebook execution may not define __file__
     repo_root = Path.cwd()
-sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(repo_root / "src"))
 
 from financial_transactions.config import StreamingConfig
 from financial_transactions.streaming.finnhub_collector import FinnhubCollector
@@ -35,8 +35,11 @@ def main() -> None:
     args = parser.parse_args()
 
     api_key = args.api_key or os.getenv("FINNHUB_API_KEY", "")
-    if not api_key:
-        logger.error("FINNHUB_API_KEY not set")
+    if not api_key or "your_actual" in api_key:
+        logger.error(
+            "FINNHUB_API_KEY is not set or is using the placeholder. "
+            "Please update your .env file with a valid key from finnhub.io."
+        )
         sys.exit(1)
 
     config = StreamingConfig(
@@ -52,8 +55,33 @@ def main() -> None:
 
     logger.info(f"Starting collector: symbols={args.symbols}, duration={args.duration}s")
     duration = args.duration if args.duration > 0 else None
+    
+    # Warning for weekend stock collection
+    now = datetime.now(tz=UTC)
+    if now.weekday() >= 5:  # Saturday or Sunday
+        stock_symbols = [s for s in args.symbols.split(",") if ":" not in s]
+        if stock_symbols:
+            logger.warning(
+                f"Today is {now.strftime('%A')}. US Stock markets are closed. "
+                f"You may not receive any trade data for: {', '.join(stock_symbols)}. "
+                "Try crypto symbols (e.g., BINANCE:BTCUSDT) for 24/7 data."
+            )
+
     collector.start(duration=duration)
+    
+    # Check if any data was collected
+    if collector.get_buffer_size() == 0:
+        # Check if any files were created in the output directory
+        files = list(Path(args.output).glob("*.parquet"))
+        if not files:
+            logger.warning(
+                "No data was collected during this run. Check your API key, "
+                "internet connection, and market hours."
+            )
+        else:
+            logger.info(f"Data collection complete. Files present in {args.output}")
 
 
 if __name__ == "__main__":
+    from datetime import UTC, datetime
     main()

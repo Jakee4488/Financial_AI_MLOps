@@ -11,9 +11,9 @@ import sys
 from dotenv import load_dotenv
 from loguru import logger
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
-from financial_transactions.config import HistoricalConfig
+from financial_transactions.config import HistoricalConfig, ProjectConfig
 from financial_transactions.streaming.alphavantage_collector import AlphaVantageCollector
 
 
@@ -21,21 +21,33 @@ def main() -> None:
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Alpha Vantage Historical Data Collector")
-    parser.add_argument("--symbols", type=str, default="AAPL,MSFT,GOOGL", help="Comma-separated symbols")
-    parser.add_argument("--interval", type=str, default="5min", help="Data interval (1min, 5min, 15min, 30min, 60min)")
+    parser.add_argument("--symbols", type=str, help="Comma-separated symbols")
+    parser.add_argument("--interval", type=str, help="Data interval (1min, 5min, 15min, 30min, 60min, daily)")
     parser.add_argument("--output-dir", type=str, default="./data/historical", help="Output directory")
+    parser.add_argument("--config", type=str, default="project_config.yml", help="Path to project config")
+    parser.add_argument("--env", type=str, default="dev", help="Environment (dev, acc, prd)")
     args = parser.parse_args()
 
-    api_key = os.getenv("ALPHAVANTAGE_API_KEY", "")
-    if not api_key:
-        logger.error("ALPHAVANTAGE_API_KEY not set")
-        sys.exit(1)
+    # Load base config
+    try:
+        project_config = ProjectConfig.from_yaml(args.config, env=args.env)
+        config = project_config.historical
+    except Exception as e:
+        logger.warning(f"Could not load config from {args.config}, using defaults: {e}")
+        config = HistoricalConfig()
 
-    config = HistoricalConfig(
-        alphavantage_api_key=api_key,
-        symbols=args.symbols.split(","),
-        interval=args.interval,
-    )
+    # Apply overrides
+    if args.symbols:
+        config.symbols = args.symbols.split(",")
+    if args.interval:
+        config.interval = args.interval
+
+    # Ensure API key is set from environment
+    api_key = os.getenv("ALPHAVANTAGE_API_KEY", config.alphavantage_api_key)
+    if not api_key:
+        logger.error("ALPHAVANTAGE_API_KEY not set in .env or config")
+        sys.exit(1)
+    config.alphavantage_api_key = api_key
 
     os.makedirs(args.output_dir, exist_ok=True)
 

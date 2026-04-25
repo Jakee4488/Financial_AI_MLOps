@@ -11,7 +11,7 @@ import sys
 
 from loguru import logger
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 
 def export_sample_data(output_dir: str) -> None:

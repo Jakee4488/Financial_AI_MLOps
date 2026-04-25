@@ -54,21 +54,32 @@ class AlphaVantageCollector:
         self._call_count = 0
 
     def fetch_symbol(self, symbol: str) -> pd.DataFrame:
-        """Fetch intraday OHLCV data for a single symbol.
+        """Fetch historical OHLCV data for a single symbol.
 
         :param symbol: Stock ticker symbol (e.g., 'AAPL')
         :return: DataFrame with OHLCV data
         """
-        logger.info(f"Fetching {self.interval} data for {symbol}...")
+        # Determine function and time series key based on interval
+        if self.interval.lower() == "daily":
+            function = "TIME_SERIES_DAILY"
+            time_series_key = "Time Series (Daily)"
+        else:
+            function = "TIME_SERIES_INTRADAY"
+            time_series_key = f"Time Series ({self.interval})"
+
+        logger.info(f"Fetching {self.interval} data for {symbol} using {function}...")
 
         params = {
-            "function": "TIME_SERIES_INTRADAY",
+            "function": function,
             "symbol": symbol,
-            "interval": self.interval,
             "outputsize": self.outputsize,
             "apikey": self.api_key,
             "datatype": "json",
         }
+
+        # TIME_SERIES_INTRADAY requires interval parameter
+        if function == "TIME_SERIES_INTRADAY":
+            params["interval"] = self.interval
 
         try:
             response = requests.get(self.base_url, params=params, timeout=30)
@@ -85,9 +96,10 @@ class AlphaVantageCollector:
                 return pd.DataFrame()
 
             # Parse the time series data
-            time_series_key = f"Time Series ({self.interval})"
             if time_series_key not in data:
-                logger.warning(f"No data found for {symbol}")
+                logger.warning(f"No data found for {symbol}. Response keys: {list(data.keys())}")
+                if "Information" in data:
+                    logger.info(f"API Info: {data['Information']}")
                 return pd.DataFrame()
 
             time_series = data[time_series_key]

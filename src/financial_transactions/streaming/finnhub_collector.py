@@ -66,10 +66,20 @@ class FinnhubCollector:
         """
         try:
             msg = json.loads(message)
-            if msg.get("type") != "trade":
+            msg_type = msg.get("type")
+
+            if msg_type == "ping":
+                logger.debug("Received keep-alive ping from Finnhub")
+                return
+
+            if msg_type != "trade":
+                logger.info(f"Received non-trade message ({msg_type}): {message[:100]}")
                 return
 
             trades = msg.get("data", [])
+            if not trades:
+                return
+
             records = []
             for trade in trades:
                 record = {

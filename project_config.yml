@@ -117,7 +117,7 @@ historical:
     - AMZN
     - TSLA
   interval: 5min
-  outputsize: full
+  outputsize: compact
   rate_limit_sleep: 12
   max_calls_per_day: 25
 

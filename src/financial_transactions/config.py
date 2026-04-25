@@ -28,7 +28,7 @@ class HistoricalConfig(BaseModel):
     alphavantage_base_url: str = "https://www.alphavantage.co/query"
     symbols: list[str] = []
     interval: str = "5min"
-    outputsize: str = "full"
+    outputsize: str = "compact"
     rate_limit_sleep: int = 12
     max_calls_per_day: int = 25
 
