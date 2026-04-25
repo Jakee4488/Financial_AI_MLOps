@@ -1,0 +1,38 @@
+resources:
+  pipelines:
+    financial_streaming_pipeline:
+      name: financial-streaming-dlt
+      allow_duplicate_names: true
+      catalog: ${var.catalog_name}
+      target: ${var.schema_name}
+      continuous: false # Set to true for always-on streaming
+      serverless: true
+      channel: "PREVIEW"
+      edition: "ADVANCED"
+      libraries:
+        - file:
+            path: ../scripts/financial/dlt_pipeline.py
+      configuration:
+        "spark.databricks.delta.enableChangeDataFeed": "true"
+        "financial.streaming_source_path": "dbfs:/Volumes/${var.catalog_name}/${var.schema_name}/streaming_landing/trades"
+        "financial.historical_source_path": "dbfs:/Volumes/${var.catalog_name}/${var.schema_name}/historical"
+
+  jobs:
+    financial_processing_workflow:
+      name: financial-processing-workflow
+      tags:
+        project: financial-ai-mlops
+        pipeline: processing
+      trigger:
+        file_arrival:
+          url: "/Volumes/${var.catalog_name}/${var.schema_name}/streaming_landing/trades/"
+      tasks:
+        - task_key: run_streaming_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.financial_streaming_pipeline.id}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ../dist/*.whl

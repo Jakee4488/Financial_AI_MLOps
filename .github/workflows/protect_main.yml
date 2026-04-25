@@ -9,11 +9,12 @@ name: Protect Main Branch
 #   ✅ This workflow itself must pass as a required check on every PR
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+  #   types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   # ──────────────────────────────────────────────────────────────

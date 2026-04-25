@@ -14,6 +14,11 @@ STREAMING_SOURCE_PATH = spark.conf.get(
     "financial.streaming_source_path",
     "dbfs:/Volumes/mlops_dev/financial_transactions/streaming_landing/trades",
 )
+HISTORICAL_SOURCE_PATH = spark.conf.get(
+    "financial.historical_source_path",
+    "dbfs:/Volumes/mlops_dev/financial_transactions/historical",
+)
+
 TRADE_SCHEMA = StructType(
     [
         StructField("trade_id", StringType(), True),
@@ -24,6 +29,26 @@ TRADE_SCHEMA = StructType(
         StructField("exchange", StringType(), True),
     ]
 )
+
+
+@dlt.table(
+    name="bronze_historical",
+    comment="Raw historical OHLCV data ingested from Volumes via Auto Loader",
+    table_properties={
+        "quality": "bronze",
+        "delta.enableChangeDataFeed": "true",
+    },
+)
+def bronze_historical():
+    """Ingest historical CSV data using Auto Loader."""
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("header", "true")
+        .option("inferSchema", "true")
+        .load(HISTORICAL_SOURCE_PATH)
+        .withColumn("_ingested_at", F.current_timestamp())
+    )
 
 
 @dlt.table(
@@ -61,7 +86,26 @@ def bronze_trades():
 @dlt.expect("valid_volume", "volume >= 0")
 def silver_trades():
     """Clean and enrich Bronze trade data."""
-    bronze = dlt.read_stream("bronze_trades")
+    bronze_stream = dlt.read_stream("bronze_trades")
+    bronze_hist = dlt.read_stream("bronze_historical")
+
+    # Map historical data schema to match streaming trades
+    hist_mapped = bronze_hist.select(
+        F.md5(F.concat_ws("_", F.col("symbol"), F.col("timestamp"))).alias("trade_id"),
+        F.col("symbol"),
+        F.col("close").alias("price"),
+        F.col("volume"),
+        F.col("timestamp"),
+        F.lit("US").alias("exchange")
+    )
+
+    # Select the same columns from streaming trades
+    stream_mapped = bronze_stream.select(
+        "trade_id", "symbol", "price", "volume", "timestamp", "exchange"
+    )
+
+    # Combine both historical and streaming data into one unified stream
+    bronze = stream_mapped.unionByName(hist_mapped)
 
     return (
         bronze.dropDuplicates(["trade_id"])
