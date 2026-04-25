@@ -35,6 +35,15 @@ GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_dev.financial_transactions.packa
 CREATE VOLUME IF NOT EXISTS mlops_dev.financial_transactions.streaming_landing
 COMMENT 'Streaming landing volume for raw trade files';
 
+-- Create volume for historical data storage
+CREATE VOLUME IF NOT EXISTS mlops_dev.financial_transactions.historical
+COMMENT 'Historical data volume for OHLCV files';
+
+-- Grant permissions on volumes
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_dev.financial_transactions.packages TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_dev.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_dev.financial_transactions.historical TO `jacobbinu4488code@gmail.com`;
+
 -- Grant permissions on streaming landing volume
 GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_dev.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;
 
@@ -67,6 +76,15 @@ GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_acc.financial_transactions.packa
 CREATE VOLUME IF NOT EXISTS mlops_acc.financial_transactions.streaming_landing
 COMMENT 'Streaming landing volume for raw trade files';
 
+-- Create volume for historical data storage
+CREATE VOLUME IF NOT EXISTS mlops_acc.financial_transactions.historical
+COMMENT 'Historical data volume for OHLCV files';
+
+-- Grant permissions on volumes
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_acc.financial_transactions.packages TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_acc.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_acc.financial_transactions.historical TO `jacobbinu4488code@gmail.com`;
+
 -- Grant permissions on streaming landing volume
 GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_acc.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;
 
@@ -98,6 +116,15 @@ GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_prd.financial_transactions.packa
 -- Create volume for streaming landing data (Bronze Auto Loader source)
 CREATE VOLUME IF NOT EXISTS mlops_prd.financial_transactions.streaming_landing
 COMMENT 'Streaming landing volume for raw trade files';
+
+-- Create volume for historical data storage
+CREATE VOLUME IF NOT EXISTS mlops_prd.financial_transactions.historical
+COMMENT 'Historical data volume for OHLCV files';
+
+-- Grant permissions on volumes
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_prd.financial_transactions.packages TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_prd.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;
+GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_prd.financial_transactions.historical TO `jacobbinu4488code@gmail.com`;
 
 -- Grant permissions on streaming landing volume
 GRANT READ_VOLUME, WRITE_VOLUME ON VOLUME mlops_prd.financial_transactions.streaming_landing TO `jacobbinu4488code@gmail.com`;

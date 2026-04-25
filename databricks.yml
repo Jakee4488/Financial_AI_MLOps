@@ -26,10 +26,10 @@ variables:
     default: PAUSED
   finnhub_api_key:
     description: Finnhub WebSocket API key
-    default: ""
+    default: "empty"
   alphavantage_api_key:
     description: Alpha Vantage REST API key
-    default: ""
+    default: "empty"
   stream_checkpoint_path:
     description: Streaming checkpoint base path
     default: /Workspace/checkpoints/financial-anomaly

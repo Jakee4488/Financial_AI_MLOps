@@ -84,10 +84,10 @@ Pass condition:
 
 ```bash
 # Run pipelines in dependency order:
-databricks bundle run -t dev financial_api_ingestion_workflow  # Step 1: ingest data
-databricks bundle run -t dev financial_streaming_pipeline      # Step 2: DLT Bronze→Gold
-databricks bundle run -t dev financial_retraining_workflow     # Step 3: train + deploy model
-databricks bundle run -t dev drift_monitoring_job              # Step 4: drift check
+databricks bundle run -t dev financial_historical_ingestion   # Step 1a: ingest history (Alpha Vantage)
+databricks bundle run -t dev financial_streaming_workflow      # Step 1b: ingest stream (Finnhub) + DLT
+databricks bundle run -t dev financial_retraining_workflow     # Step 2: train + deploy model
+databricks bundle run -t dev drift_monitoring_job              # Step 3: drift check
 ```
 
 Pass conditions:

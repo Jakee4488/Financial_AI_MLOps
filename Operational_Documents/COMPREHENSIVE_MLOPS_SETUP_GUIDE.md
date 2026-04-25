@@ -21,8 +21,8 @@ Target workflow:
 6. **Retrain weekly** (plus drift-triggered retraining if needed).
 
 Core bundle resources:
-- `resources/ingestion_workflow.yml`  -> `financial_api_ingestion_workflow`
-- `resources/streaming_pipeline.yml` -> `financial_streaming_pipeline`
+- `resources/ingestion_workflow.yml`  -> `financial_historical_ingestion`
+- `resources/streaming_pipeline.yml`  -> `financial_streaming_workflow` (Job) + `financial_streaming_pipeline` (DLT)
 - `resources/retraining_workflow.yml` -> `financial_retraining_workflow`
 - `resources/drift_monitoring.yml`   -> `drift_monitoring_job`
 
