@@ -64,19 +64,23 @@ class ModelTournament:
         self.spark = spark
         self.primary_metric = config.champion_challenger.primary_metric
 
-    def run_tournament(self) -> TournamentResult:
-        """Run the full 4-model tournament.
+    def run_tournament(self, model_classes: list[type[BaseAnomalyModel]] | None = None) -> TournamentResult:
+        """Run the tournament on specified models, or all if none provided.
 
+        :param model_classes: List of model classes to train. Defaults to all 4.
         :return: TournamentResult with challenger (best model) and all results
         """
+        if model_classes is None:
+            model_classes = self.MODEL_CLASSES
+
         logger.info("=" * 60)
-        logger.info("🏆 Starting 4-Model Tournament")
+        logger.info(f"🏆 Starting Tournament with {len(model_classes)} models")
         logger.info("=" * 60)
 
         tournament_start = time.time()
         results: list[ModelResult] = []
 
-        for model_class in self.MODEL_CLASSES:
+        for model_class in model_classes:
             model_name = model_class.__name__
             logger.info(f"\n--- Training {model_name} ---")
 

@@ -1,5 +1,22 @@
 resources:
   jobs:
+    # MODE 1: Initial Discovery
+    financial_discovery_workflow:
+      name: financial-discovery-workflow
+      tags:
+        project: financial-ai-mlops
+        pipeline: discovery
+      tasks:
+        - task_key: train_discovery
+          notebook_task:
+            notebook_path: ../scripts/financial/train_discovery.py
+            base_parameters:
+              git_sha: ${var.git_sha}
+              branch: ${var.branch}
+              catalog_name: ${var.catalog_name}
+              schema_name: ${var.schema_name}
+
+    # MODE 2: Continuous Retraining
     financial_retraining_workflow:
       name: financial-retraining-workflow
       schedule:
@@ -10,18 +27,25 @@ resources:
         project: financial-ai-mlops
         pipeline: retraining
       tasks:
-        - task_key: train_tournament
+        - task_key: train_incremental
           notebook_task:
-            notebook_path: ../scripts/financial/train_tournament.py
+            notebook_path: ../scripts/financial/train_incremental.py
             base_parameters:
               git_sha: ${var.git_sha}
               branch: ${var.branch}
+              catalog_name: ${var.catalog_name}
+              schema_name: ${var.schema_name}
 
-        - task_key: deploy_model
-          depends_on:
-            - task_key: train_tournament
+    # MODE 3: Validation & A/B Testing
+    financial_ab_testing_workflow:
+      name: financial-ab-testing-workflow
+      tags:
+        project: financial-ai-mlops
+        pipeline: ab_testing
+      tasks:
+        - task_key: evaluate_ab_test
           notebook_task:
-            notebook_path: ../scripts/financial/deploy_anomaly_model.py
+            notebook_path: ../scripts/financial/evaluate_ab_test.py
             base_parameters:
               catalog_name: ${var.catalog_name}
               schema_name: ${var.schema_name}
